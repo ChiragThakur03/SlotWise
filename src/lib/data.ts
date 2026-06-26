@@ -476,7 +476,11 @@ export async function getIntakeForm(): Promise<IntakeForm> {
 
   if (!profileId) return empty;
 
-  const { data } = await createClient()
+  const supabase = createClient();
+
+  // Prefer the general form (service_id IS NULL); fall back to the first
+  // service-specific form if no general form exists yet.
+  const { data: general } = await supabase
     .from("intake_forms")
     .select("*, intake_form_fields(*)")
     .eq("profile_id", profileId)
@@ -485,7 +489,17 @@ export async function getIntakeForm(): Promise<IntakeForm> {
     .limit(1)
     .maybeSingle();
 
-  return data ? mapIntakeForm(data) : empty;
+  if (general) return mapIntakeForm(general);
+
+  const { data: any } = await supabase
+    .from("intake_forms")
+    .select("*, intake_form_fields(*)")
+    .eq("profile_id", profileId)
+    .order("created_at")
+    .limit(1)
+    .maybeSingle();
+
+  return any ? mapIntakeForm(any) : empty;
 }
 
 // ─── Public booking page (no auth — admin client bypasses RLS) ───────────────

@@ -362,32 +362,38 @@ async function run() {
   await admin.from("notification_log").insert(notifRows);
   console.log("  ✓ Notification log:", notifRows.length, "entries");
 
-  // ── 8. Intake form ──────────────────────────────────────────────────────
+  // ── 8. Intake form (general — service_id: null) ─────────────────────────────
   const { data: form, error: formErr } = await admin
     .from("intake_forms")
-    .insert({ profile_id: userId, service_id: sSmall.id, name: "Custom Piece Intake" })
+    .insert({ profile_id: userId, service_id: null, name: "New Client Intake" })
     .select("id")
     .single();
   if (formErr) throw new Error("intake_form: " + formErr.message);
 
-  await admin.from("intake_form_fields").insert([
-    { form_id: form.id, label: "Placement on body", field_type: "short_text", required: true,  sort_order: 0 },
-    { form_id: form.id, label: "Approximate size",  field_type: "dropdown",   required: true,  sort_order: 1, options: JSON.stringify(["Small (< 2in)", "Medium (2–4in)", "Large (4–6in)", "Extra large (6in+)"]) },
-    { form_id: form.id, label: "Style preference",  field_type: "multi_select", required: false, sort_order: 2, options: JSON.stringify(["Blackwork", "Fine line", "Traditional", "Neo-trad", "Realism", "Japanese"]) },
-    { form_id: form.id, label: "Reference images or description", field_type: "long_text", required: true, sort_order: 3 },
-    { form_id: form.id, label: "Allergies or skin conditions", field_type: "long_text", required: false, sort_order: 4 },
+  const base = { form_id: form.id, options: [], is_waiver: false, requires_signature: false, waiver_text: null };
+  const { error: fieldsErr } = await admin.from("intake_form_fields").insert([
+    { ...base, label: "Full legal name", field_type: "short_text", required: true, sort_order: 0 },
+    { ...base, label: "Date of birth", field_type: "date", required: true, sort_order: 1 },
+    { ...base, label: "Placement on body", field_type: "short_text", required: true, sort_order: 2 },
+    { ...base, label: "Approximate size", field_type: "dropdown", required: true, sort_order: 3, options: ["Tiny (< 1in)", "Small (1-2in)", "Medium (2-4in)", "Large (4-6in)", "Extra large (6in+)"] },
+    { ...base, label: "Style preference", field_type: "multi_select", required: false, sort_order: 4, options: ["Blackwork", "Fine line", "Traditional", "Neo-trad", "Realism", "Japanese", "Geometric", "Watercolour"] },
+    { ...base, label: "Reference images or design description", field_type: "long_text", required: true, sort_order: 5 },
+    { ...base, label: "Skin conditions, allergies or medical history relevant to tattooing", field_type: "long_text", required: false, sort_order: 6 },
+    { ...base, label: "Have you been tattooed before?", field_type: "dropdown", required: true, sort_order: 7, options: ["Yes", "No"] },
     {
       form_id: form.id,
-      label: "Aftercare Waiver",
+      label: "Aftercare & Liability Waiver",
       field_type: "checkbox",
       required: true,
-      sort_order: 5,
+      sort_order: 8,
+      options: [],
       is_waiver: true,
       requires_signature: true,
-      waiver_text: "I understand and agree to follow the aftercare instructions provided. I acknowledge that tattoo healing varies by individual and that Iron & Ink is not responsible for issues arising from failure to follow aftercare guidelines.",
+      waiver_text: "I confirm that I am 18 years of age or older. I understand that tattooing involves needles penetrating the skin and carries inherent risks. I agree to follow all aftercare instructions provided by Iron & Ink Tattoo. I acknowledge that healing results vary by individual and that Iron & Ink is not responsible for complications arising from failure to follow aftercare guidelines or from pre-existing medical conditions. I release Iron & Ink Tattoo and its artists from any liability related to the tattooing procedure.",
     },
   ]);
-  console.log("  ✓ Intake form + fields");
+  if (fieldsErr) throw new Error("intake_form_fields: " + fieldsErr.message);
+  console.log("  ✓ Intake form + 9 fields");
 
   console.log("\n✅  Demo seed complete!");
   console.log("   Email:    demo@slotwise.io");
