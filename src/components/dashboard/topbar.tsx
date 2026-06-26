@@ -2,7 +2,9 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Menu, Copy, ChevronDown, LogOut, Settings as SettingsIcon, Check } from "lucide-react";
+import { createClient } from "@/lib/supabase/client";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { SidebarNav } from "@/components/dashboard/sidebar";
 import { Button } from "@/components/ui/button";
@@ -22,9 +24,15 @@ export function Topbar({
   businessName: string;
   username: string;
 }) {
+  const router = useRouter();
   const [navOpen, setNavOpen] = useState(false);
   const [copied, setCopied] = useState(false);
   const bookingUrl = `slotwise.io/book/${username}`;
+
+  async function handleLogout() {
+    await createClient().auth.signOut();
+    router.push("/login");
+  }
 
   function copyLink() {
     navigator.clipboard?.writeText(`https://${bookingUrl}`);
@@ -80,10 +88,8 @@ export function Topbar({
             </Link>
           </DropdownMenuItem>
           <DropdownMenuSeparator />
-          <DropdownMenuItem asChild destructive>
-            <Link href="/login">
-              <LogOut className="h-4 w-4" /> Log out
-            </Link>
+          <DropdownMenuItem destructive onSelect={handleLogout}>
+            <LogOut className="h-4 w-4" /> Log out
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
