@@ -13,7 +13,8 @@
     "db:new": "supabase migration new",
     "db:reset": "supabase db reset",
     "db:types": "supabase gen types typescript --linked --schema public > src/lib/supabase/database.types.ts",
-    "db:status": "supabase migration list"
+    "db:status": "supabase migration list",
+    "seed:demo": "node --env-file=.env.local scripts/seed-demo.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.0",
