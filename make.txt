@@ -1,0 +1,277 @@
+BUILD PROMPT — SLOTWISE SAAS
+Vertical scheduling SaaS
+for niche service professionals
+A complete product specification — what to build, how it should work, how it should look, and what every screen needs to contain. Hand this to any developer or AI coding tool and get a working product.
+Next.js + Supabase
+Stripe payments
+Teal design system
+Zero AI cost
+Multi-vertical
+1
+What you're building
+CORE CONCEPT
+Build SlotWise — a booking and scheduling SaaS where the entire product is pre-configured for a specific service profession. When a user signs up, they pick their profession (tattoo artist, dog groomer, music teacher, mobile hairstylist, physiotherapist, personal trainer) and immediately get an account with the right slot types, intake forms, deposit rules, and reminder language already set up. No configuration required. They're live in 10 minutes.
+THE KEY DIFFERENCE FROM CALENDLY
+Calendly is a meeting scheduler. SlotWise is a business operations tool for service professionals. It handles deposits, no-show protection, client records, intake waivers, breed-specific time slots, recurring lesson billing, and portfolio display — things Calendly will never build because they serve everyone and therefore serve no specific profession well.
+TECH STACK RECOMMENDATION
+Frontend: Next.js 14 (App Router) · Database + Auth: Supabase · Payments: Stripe (subscriptions + deposit collection) · Email + SMS: Resend (email) + Twilio (SMS) · Hosting: Vercel · UI components: Tailwind CSS + shadcn/ui with custom teal overrides. No AI APIs — zero per-request cost.
+2
+Design system — teal-first
+COLOR PALETTE
+Every color decision flows from this palette. Use it consistently across all components.
+Navy
+#0D1B2A
+Teal
+#00C2A8
+Teal mid
+#019587
+Teal light
+#E1F5EE
+Off-white
+#F4F7F9
+Gold
+#F5A623
+Red
+#E8474B
+TYPOGRAPHY RULES
+Font: Inter (Google Fonts)
+Headings: 500 weight, tight tracking
+Body: 400 weight, 1.6 line-height
+Labels + captions: 11–12px, uppercase with 0.08em tracking for section labels
+Never: 700 weight — too heavy. Use 500 for emphasis.
+SPACING + CORNERS
+Base unit: 4px
+Card padding: 20px / 24px
+Card radius: 12px
+Button radius: 8px
+Input radius: 8px
+Pill radius: 99px
+Page max-width: 1200px
+DESIGN TONE
+Light mode by default. Navy sidebar on dark background, off-white main content area. Teal is used for: primary buttons, active states, badges, progress indicators, and key data highlights. Gold (#F5A623) is used only for revenue numbers and milestone callouts. Red only for warnings and errors. Everything else uses shades of navy, slate, and off-white. No gradients. No shadows heavier than 0 2px 8px rgba(0,0,0,0.08). Flat, professional, calm.
+COMPONENT STYLE RULES
+Primary button: bg #00C2A8, text #0D1B2A (navy), font-weight 500, 36px height, 8px radius. Hover: bg #019587.
+
+Secondary button: bg transparent, border 1px #00C2A8, text #019587. Hover: bg #E1F5EE.
+
+Input fields: bg white, border 1px #D0DCE8. Focus: border 1.5px #00C2A8, no box-shadow. Placeholder color #A0B4C2.
+
+Cards: bg white, border 0.5px #E0EAF0, radius 12px, padding 20px. No shadow by default.
+
+Active nav items: bg #E1F5EE, text #0F6E56, left indicator 3px solid #00C2A8.
+
+Status badges: Confirmed = teal pill. Pending = amber pill. Cancelled = red pill. Completed = gray pill.
+3
+All screens to build
+AUTH SCREENS
+Sign up — email + password. Below the form: "Pick your profession" step with large illustrated cards for each vertical. Selected card gets teal border + checkmark. No profession = can't proceed.
+Log in — minimal. Email + password + "Forgot password" link. No social login for now.
+Onboarding wizard — 4 steps after signup: (1) Business name + photo, (2) Services + pricing + duration, (3) Availability hours per day, (4) Deposit amount + Stripe connect. Progress bar in teal at top.
+DASHBOARD (main home)
+Top stats row: 4 metric cards — Today's bookings, This week's revenue, No-show rate this month, Active clients total.
+Left column: Today's schedule as a vertical timeline. Each appointment is a card: client name, service, time, status badge, avatar initials circle.
+Right column: Upcoming bookings list (next 7 days) + a "Quick actions" row: Add manual booking, Send reminder to all today, View deposit summary.
+Revenue chart: Below the columns — a 30-day bar chart in teal showing daily revenue. Hovering a bar shows date + amount tooltip.
+CALENDAR VIEW
+Header: Week/Day/Month toggle (pills). Navigation arrows. "Add booking" button (teal, top right).
+Week view (default): 7-column grid. Time slots down the left. Booked slots are teal cards with client name + service. Available slots are empty. Blocked/off slots are light gray hatched.
+Clicking a booked slot opens a slide-over panel from the right with full booking details, client info, payment status, and action buttons (Confirm / Mark no-show / Send reminder / Cancel).
+Clicking an empty slot opens "New booking" modal with pre-filled date/time.
+BOOKINGS LIST
+Table layout with columns: Client name, Service, Date/Time, Duration, Deposit paid (yes/no), Total value, Status badge, Actions (three-dot menu).
+Filter bar above table: Status dropdown (All / Confirmed / Pending / Completed / Cancelled / No-show) + Date range picker + Search by client name.
+Bulk actions: Checkboxes on each row. When selected, a floating action bar appears at bottom: "Send reminder to selected" / "Export selected to CSV".
+Clicking a row opens the booking detail slide-over (same as calendar).
+BOOKING DETAIL PANEL (slide-over)
+Header: Client avatar + name + service name + status badge.
+Info rows: Date, Time, Duration, Location (if mobile pro), Notes from client.
+Payment section: Deposit amount, paid/unpaid status, total session fee, payment method.
+Intake form answers: Expandable section showing what the client filled in (e.g. dog breed, style reference, medical notes).
+Action buttons: Confirm booking / Mark as completed / Mark as no-show / Send custom reminder / Cancel booking / Reschedule.
+Notes field: Freetext area for pro's private notes about this client/session.
+CLIENTS (CRM-lite)
+List view: Cards or table rows — client name, avatar, total sessions, total spent, last visit date, no-show count.
+Client profile page: Full history of all bookings with this client, total revenue from them, their intake form answers on file, notes, and a "Book again" button.
+Loyalty indicator: A small badge showing "returning" after 3+ bookings. Color: teal.
+SERVICES MANAGEMENT
+Grid of service cards. Each card: service name, duration, price, deposit amount, active/inactive toggle, edit button.
+Add/edit service modal: Name, description, duration (dropdown: 30min / 45min / 60min / 90min / 2hr / custom), price, deposit required (toggle + amount), max daily limit, buffer time after session.
+Vertical-specific extras: For groomers — breed size selector that adjusts default duration. For music teachers — "recurring lesson" toggle that auto-creates weekly repeat. For tattoo artists — "style tags" (traditional, blackwork, realism, etc.) that show on booking page.
+AVAILABILITY SETTINGS
+Weekly schedule grid: Mon–Sun rows, each with on/off toggle + start time + end time + "Add break" option (e.g. lunch 12–1pm).
+Date overrides: Calendar picker to mark specific dates as unavailable or with custom hours. E.g. "Dec 25 — closed" or "Jan 3 — only 9am–1pm".
+Advance booking window: How far in advance clients can book (e.g. up to 60 days out, minimum 24 hours notice).
+Buffer time: Automatic gap between appointments (0 / 10 / 15 / 30 min).
+PUBLIC BOOKING PAGE (client-facing)
+URL: slotwise.io/book/[username] — no login required for clients.
+Header: Pro's name, photo, profession badge, short bio, location (if relevant).
+Step 1 — Pick a service: Cards for each active service with name, duration, price, deposit note.
+Step 2 — Pick a date/time: Month calendar showing available dates highlighted in teal. Clicking a date shows available time slots as pill buttons. Selected slot turns solid teal.
+Step 3 — Fill intake form: Vertical-specific fields. Required fields marked with asterisk. File upload for reference photos (tattoo artists). Pet details (groomers). Health notes (physio).
+Step 4 — Pay deposit + confirm: Summary card showing what they're booking. Stripe payment form embedded inline. "Book & Pay Deposit" button. No account needed for the client.
+Confirmation screen: Big teal checkmark, appointment summary, "Add to calendar" buttons (Google / Apple / Outlook), and reminder that they'll get an SMS/email confirmation.
+INTAKE FORM BUILDER
+Drag-and-drop form builder with field types: Short text, Long text, Dropdown, Multi-select, Date, File upload, Checkbox (waiver acceptance).
+Each vertical gets a pre-built template loaded on signup — pros can edit but don't have to build from zero. E.g. groomer gets: Dog name, Breed, Age, Vaccination up to date (checkbox), Aggressive behavior notes, Emergency contact.
+Waiver text field with a "Requires digital signature" toggle. Signed waivers stored per client per booking.
+REMINDERS & NOTIFICATIONS
+Reminder schedule settings: Toggle-based UI. "Send reminder 48 hours before" / "24 hours before" / "2 hours before". Each toggle opens channel selector: Email / SMS / Both.
+Message templates: Editable text area for each reminder with variables like {client_name}, {service}, {date}, {time}, {deposit_amount}, {booking_link}.
+No-show follow-up: Automatic message sent 15 minutes after missed appointment. Editable template.
+Notification log: Table of all sent notifications — timestamp, client, type, channel, delivered/failed status.
+ANALYTICS
+Revenue overview: Monthly revenue bar chart (teal). MRR line overlaid in gold. Date range picker.
+Booking stats: Total bookings, completion rate, no-show rate, cancellation rate — shown as large numbers with trend arrows vs last month.
+Top services: Horizontal bar chart — which services make the most money and have the most bookings.
+Busiest hours heatmap: 7×24 grid (days × hours). Teal intensity = how many bookings. Shows at a glance when the pro is busiest.
+Client metrics: New vs returning clients ratio (donut chart). Average client lifetime value. Average visits before churn.
+SETTINGS
+Profile: Name, bio, photo, profession, location, contact details.
+Booking page: Custom username, page accent color (choose from 6 teal variants), show/hide social links.
+Payments: Stripe connect status, deposit policy, cancellation policy (text), refund rules.
+Billing: Current plan (Starter / Pro / Studio), usage this month, upgrade/downgrade.
+Notifications: What emails the pro themselves receives (new booking, cancellation, payment received).
+Team (Studio plan only): Invite staff, assign services to staff members, view per-staff booking counts.
+4
+User flows
+PRO ONBOARDING FLOW
+1
+Sign up page → enter email + password → click "Continue"
+2
+Pick profession → large illustrated cards, one per vertical → click to select → teal border + check → click "Get started as [profession]"
+3
+Wizard step 1 → business name + upload profile photo + short bio
+4
+Wizard step 2 → services are pre-populated based on profession. Pro edits prices + durations. Can add/remove.
+5
+Wizard step 3 → weekly availability. Mon–Sun toggles with time pickers. "Copy to all weekdays" shortcut.
+6
+Wizard step 4 → connect Stripe for deposits (OAuth flow). Or "Skip for now" to start without payments.
+7
+Dashboard → show confetti animation + "Your booking page is live" banner with copy-link button and "Share on Instagram" shortcut.
+CLIENT BOOKING FLOW
+1
+Client opens slotwise.io/book/[username] on any device
+2
+Sees service cards → clicks the service they want
+3
+Calendar → unavailable dates grayed out → clicks available date → time slots appear → clicks preferred slot
+4
+Intake form → fills in required fields. If there's a waiver, must tick checkbox. File upload appears if pro enabled reference photo.
+5
+Enter name + email + phone → no account creation required
+6
+Payment → Stripe card form appears. "Your card is charged [deposit amount] now. Remaining [balance] is paid at appointment." → Pay button.
+7
+Confirmation screen → checkmark + booking summary + calendar download buttons. SMS + email sent automatically.
+8
+Reminder sequence kicks off → 48hr, 24hr, 2hr before — automatic, no action from pro needed.
+NO-SHOW FLOW
+1
+Appointment time passes → system flags booking as "pending no-show" after start time + 15 minutes
+2
+Pro gets notification: "Looks like [client] hasn't shown up. Mark as no-show?" with one-tap button in push/email.
+3
+Pro marks no-show → deposit is kept (Stripe transfer to pro) → slot re-opens for new bookings → client gets auto message (editable template).
+4
+No-show logged on client's profile. After 2 no-shows, system recommends pro switch that client to "full payment required at booking".
+5
+Vertical-specific logic
+TATTOO ARTISTS
+• Portfolio grid on booking page (image upload in settings)
+• Style tags on each service (traditional, neo-trad, blackwork, realism, watercolor)
+• "Reference photo" required field in intake form
+• Minimum deposit enforced (suggest 30% of quoted price)
+• Session length options: 1hr, 2hr, 3hr, half-day, full-day
+• Aftercare waiver with digital signature
+DOG GROOMERS
+• Breed selector in intake form (dropdown with 200+ breeds)
+• Breed size auto-sets default duration (S=45min, M=60min, L=90min, XL=2hr)
+• "Aggressive or anxious dog" flag — shows warning to pro
+• Vaccination confirmation checkbox
+• Multiple pets per booking option
+• Pickup/dropoff time window setting
+MUSIC TEACHERS
+• "Recurring lesson" toggle on booking — auto-creates weekly repeat
+• Instrument selector field
+• Student skill level dropdown (beginner / intermediate / advanced)
+• Package billing: pay for 4 lessons upfront at discount
+• Session notes field on each completed booking (private to pro)
+• Pause/resume recurring lesson without cancelling
+MOBILE BEAUTY (HAIR/MAKEUP)
+• Location field required — client enters their address
+• Travel time calculator: pro sets base location, system adds buffer between appointments based on distance
+• "Cluster nearby" setting: suggest bookings in same area on same day
+• Event type tag (wedding, shoot, regular appointment)
+• Add-on services (e.g. blow dry +30min, updo +45min) that stack onto base duration
+6
+UX rules — non-negotiable
+Mobile-first everywhere. The public booking page must be pixel-perfect on mobile. Most clients will book from Instagram bio links on their phones. Test every flow at 375px width first.
+Zero dead ends. Every error state has a clear recovery path. Payment failed → tell them exactly why + retry button. Time slot taken → show next 3 available slots. No generic "something went wrong".
+Optimistic UI. When a pro confirms a booking or marks a no-show, update the UI instantly. Don't make them wait for the server response to see the change.
+Fewer clicks = better. The pro should be able to see their day, confirm an appointment, and send a reminder in under 3 taps from the dashboard. Never bury common actions in dropdowns.
+Empty states with purpose. First time a pro opens the calendar, it's empty. Show a helpful prompt: "Your first booking is one share away → here's your booking link" with a big copy button and share icons.
+Loading skeletons, never spinners. Any list or dashboard that loads data should show skeleton cards in the right shape. Spinners feel broken. Skeletons feel fast.
+Confirmation before destructive actions. Cancel booking, delete service, remove client — always show a confirmation modal. State clearly what will happen (e.g. "This will refund the deposit and notify the client").
+Teal = action, not decoration. Only use teal on interactive elements and data highlights. Don't use it for decorative borders or section backgrounds. When users see teal, they should think "I can do something here".
+7
+Email + SMS templates
+BOOKING CONFIRMATION (TO CLIENT)
+Subject: You're booked with {pro_name} — {service} on {date}
+Body: Clean, minimal. Booking summary box (teal background, white text) with: service, date, time, location or address, deposit paid confirmation. Below: "Need to reschedule?" link. No marketing. No fluff.
+REMINDER (TO CLIENT)
+Subject: See you tomorrow, {client_first_name} 👋
+Body: Friendly, brief. Just the essentials: when, where, what. One line about preparing (e.g. "Please arrive with clean skin and no lotion" for tattoo). Link to cancel/reschedule if more than 24hrs away.
+NEW BOOKING ALERT (TO PRO)
+Subject: New booking: {client_name} — {service} on {date}
+Body: Client name, service, time, deposit paid amount. One-click "View booking" button (teal). "There's $X in your Stripe account" note if deposit was collected.
+NO-SHOW FOLLOW-UP (TO CLIENT)
+Subject: We missed you today, {client_first_name}
+Body: Warm, non-accusatory. "We had a slot reserved for you at {time} today. If something came up, no worries — here's the link to rebook." One clear rebook button. No lecture. No fees listed (that's handled by the deposit policy they agreed to).
+8
+Subscription plans
+STARTER — $19/MO
+Up to 50 bookings/month
+1 service type
+Basic email reminders
+Stripe deposit collection
+Public booking page
+Client list
+
+Best for: solo pros just starting out
+PRO — $49/MO
+Unlimited bookings
+Up to 5 service types
+SMS + email reminders
+Intake forms + waivers
+Analytics dashboard
+Client notes + history
+No-show protection
+
+Best for: established solo pros
+STUDIO — $79/MO
+Everything in Pro
+Up to 5 staff members
+Per-staff calendars
+White-label booking page
+Priority support
+Custom intake form builder
+CSV export
+
+Best for: small studios with team
+PLAN ENFORCEMENT LOGIC
+When a Starter user hits 50 bookings in a month, show an upgrade banner on the dashboard (not a block). Let them take a few more bookings with a "You're over your limit" warning, then gate at 60. Never cut off a pro mid-month abruptly — give 48hr warning first. Downgrades take effect at next billing cycle, never immediately.
+9
+What NOT to build (yet)
+No mobile app — responsive web is enough. Build a PWA if push notifications are needed.
+
+No marketplace — don't let clients "find" pros. That's a different product. SlotWise is a tool for pros, not a discovery platform.
+
+No AI features — no chatbot, no auto-scheduling suggestions, no "AI-generated responses". Keep costs at zero.
+
+No video calls — out of scope. Link to Zoom/Google Meet in confirmation emails if needed.
+
+No multi-language — English only for v1. Add i18n scaffolding but don't translate.
+
+No native payments outside Stripe — no PayPal, no bank transfer, no crypto. Stripe only.
+Copy full prompt
