@@ -19,8 +19,8 @@ export default function ClientsPage() {
   const rows = useMemo(() => {
     return store.clients
       .map((c) => ({ client: c, stats: computeClientStats(c.id, store.bookings) }))
-      .filter(({ client }) => !search || client.name.toLowerCase().includes(search.toLowerCase()))
-      .sort((a, b) => b.stats.totalSpentCents - a.stats.totalSpentCents);
+      .sort((a, b) => a.client.name.localeCompare(b.client.name))
+      .filter(({ client }) => !search || client.name.toLowerCase().includes(search.toLowerCase()));
   }, [store.clients, store.bookings, search]);
 
   return (
@@ -36,6 +36,7 @@ export default function ClientsPage() {
       <Table>
         <TableHeader>
           <TableRow>
+            <TableHead className="w-12">#</TableHead>
             <TableHead>Client</TableHead>
             <TableHead>Total sessions</TableHead>
             <TableHead>Total spent</TableHead>
@@ -46,13 +47,14 @@ export default function ClientsPage() {
         <TableBody>
           {rows.length === 0 && (
             <TableRow>
-              <TableCell colSpan={5} className="py-10 text-center text-muted-foreground">
+              <TableCell colSpan={6} className="py-10 text-center text-muted-foreground">
                 No clients found.
               </TableCell>
             </TableRow>
           )}
-          {rows.map(({ client, stats }) => (
+          {rows.map(({ client, stats }, index) => (
             <TableRow key={client.id} className="cursor-pointer" onClick={() => router.push(`/clients/${client.id}`)}>
+              <TableCell className="text-muted-foreground">{index + 1}</TableCell>
               <TableCell>
                 <div className="flex items-center gap-2.5">
                   <Avatar name={client.name} size="sm" />

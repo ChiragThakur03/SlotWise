@@ -160,9 +160,10 @@ export default function BookingsPage() {
         </Select>
 
         <div className="flex items-center gap-2">
-          <Input type="date" className="w-36" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} />
+          <span className="text-sm text-muted-foreground">From</span>
+          <Input type="date" className="w-40" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} />
           <span className="text-sm text-muted-foreground">to</span>
-          <Input type="date" className="w-36" value={dateTo} onChange={(e) => setDateTo(e.target.value)} />
+          <Input type="date" className="w-40" value={dateTo} onChange={(e) => setDateTo(e.target.value)} />
         </div>
 
         {(status !== "all" || search || dateFrom || dateTo) && (
