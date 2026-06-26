@@ -41,7 +41,14 @@ export default function SignupPage() {
     setLoading(false);
 
     if (signUpError) {
-      setError(signUpError.message);
+      const msg = signUpError.message.toLowerCase();
+      if (msg.includes("rate limit") || msg.includes("429")) {
+        setError("Too many sign-up attempts. Please wait a few minutes and try again.");
+      } else if (msg.includes("already registered") || msg.includes("already been registered")) {
+        setError("An account with this email already exists. Try logging in instead.");
+      } else {
+        setError(signUpError.message);
+      }
       return;
     }
 

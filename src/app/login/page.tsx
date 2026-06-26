@@ -32,7 +32,16 @@ export default function LoginPage() {
     setLoading(false);
 
     if (signInError) {
-      setError(signInError.message);
+      const msg = signInError.message.toLowerCase();
+      if (msg.includes("invalid login") || msg.includes("invalid credentials") || msg.includes("wrong")) {
+        setError("Incorrect email or password.");
+      } else if (msg.includes("email not confirmed")) {
+        setError("Please confirm your email before logging in. Check your inbox.");
+      } else if (msg.includes("rate limit") || msg.includes("429")) {
+        setError("Too many attempts. Please wait a few minutes and try again.");
+      } else {
+        setError(signInError.message);
+      }
       return;
     }
     router.push("/dashboard");
