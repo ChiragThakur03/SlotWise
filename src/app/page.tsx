@@ -1,32 +1,36 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Card } from "@/components/ui/card";
 
 export default function Home() {
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center gap-6 bg-off-white p-8">
-      <div className="flex items-center gap-2">
-        <div className="h-8 w-8 rounded-btn bg-teal" />
-        <span className="text-lg font-medium text-navy">SlotWise</span>
+    <main className="flex min-h-screen flex-col items-center justify-center gap-8 bg-off-white p-8">
+      <div className="flex flex-col items-center gap-3 text-center">
+        <div className="flex items-center gap-2">
+          <div className="h-10 w-10 rounded-btn bg-teal" />
+          <span className="text-2xl font-semibold text-navy">SlotWise</span>
+        </div>
+        <p className="max-w-sm text-muted-foreground">
+          Booking &amp; scheduling for tattoo artists, groomers, music teachers,
+          stylists, and more.
+        </p>
       </div>
-      <p className="text-sm text-muted-foreground">Design system smoke test</p>
+
       <div className="flex gap-3">
-        <Button variant="primary">Get started</Button>
-        <Button variant="secondary">Log in</Button>
+        <Button variant="primary" asChild>
+          <Link href="/signup">Get started</Link>
+        </Button>
+        <Button variant="secondary" asChild>
+          <Link href="/login">Log in</Link>
+        </Button>
       </div>
+
       <div className="flex gap-2">
         <Badge variant="confirmed">Confirmed</Badge>
         <Badge variant="pending">Pending</Badge>
         <Badge variant="cancelled">Cancelled</Badge>
         <Badge variant="completed">Completed</Badge>
       </div>
-      <Card className="w-80">
-        <p className="text-sm text-navy">Card surface</p>
-      </Card>
-      <Link href="/login" className="text-sm text-teal-mid underline">
-        /login
-      </Link>
     </main>
   );
 }
