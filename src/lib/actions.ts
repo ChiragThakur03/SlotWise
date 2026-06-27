@@ -536,6 +536,7 @@ export async function actionCreatePublicBooking(data: {
   endAt: string;
   totalPriceCents: number;
   depositAmountCents: number;
+  depositPaid: boolean;
   clientNotes: string;
 }): Promise<{ bookingId: string; clientId: string }> {
   const supabase = createAdminClient();
@@ -597,10 +598,10 @@ export async function actionCreatePublicBooking(data: {
       client_id: clientId,
       start_at: data.startAt,
       end_at: data.endAt,
-      status: "pending",
+      status: data.depositPaid ? "confirmed" : "pending",
       total_price_cents: data.totalPriceCents,
       deposit_amount_cents: data.depositAmountCents,
-      deposit_paid: false,
+      deposit_paid: data.depositPaid,
       client_notes: data.clientNotes,
       pro_notes: "",
     })

@@ -75,6 +75,7 @@ export function BookingFlow({
       startAt.setHours(h, m, 0, 0);
       const endAt = new Date(startAt.getTime() + service.durationMinutes * 60000);
 
+      const paidDeposit = service.depositRequired && service.depositAmountCents > 0;
       await actionCreatePublicBooking({
         username: profile.username,
         serviceId: service.id,
@@ -84,7 +85,8 @@ export function BookingFlow({
         startAt: startAt.toISOString(),
         endAt: endAt.toISOString(),
         totalPriceCents: service.priceCents,
-        depositAmountCents: service.depositRequired ? service.depositAmountCents : 0,
+        depositAmountCents: paidDeposit ? service.depositAmountCents : 0,
+        depositPaid: paidDeposit,
         clientNotes: "",
       });
 
