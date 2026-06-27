@@ -559,6 +559,11 @@ export async function actionCreatePublicBooking(data: {
       .maybeSingle();
     if (existing) {
       clientId = existing.id;
+      // Update name/phone to whatever the client provided in this booking
+      await supabase
+        .from("clients")
+        .update({ name: data.clientName, phone: data.clientPhone || null })
+        .eq("id", clientId);
     } else {
       const { data: created, error } = await supabase
         .from("clients")
