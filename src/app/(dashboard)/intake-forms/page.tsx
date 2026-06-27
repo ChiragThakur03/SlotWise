@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import {
   GripVertical,
   Plus,
@@ -43,11 +43,19 @@ export default function IntakeFormsPage() {
   const store = useAppStore();
   const [dragIndex, setDragIndex] = useState<number | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
+  const [saveState, setSaveState] = useState<"idle" | "saving" | "saved">("idle");
+  const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const fields = [...store.intakeForm.fields].sort((a, b) => a.sortOrder - b.sortOrder);
 
   function commit(updated: IntakeFormField[]) {
     store.setIntakeFormFields(updated.map((f, i) => ({ ...f, sortOrder: i })));
+    setSaveState("saving");
+    if (saveTimer.current) clearTimeout(saveTimer.current);
+    saveTimer.current = setTimeout(() => {
+      setSaveState("saved");
+      saveTimer.current = setTimeout(() => setSaveState("idle"), 1500);
+    }, 700);
   }
 
   function updateField(id: string, patch: Partial<IntakeFormField>) {
@@ -91,7 +99,13 @@ export default function IntakeFormsPage() {
           <h1 className="text-xl font-medium text-navy">Intake form</h1>
           <p className="text-sm text-muted-foreground">Clients fill this in before paying their deposit.</p>
         </div>
-        <DropdownMenu>
+        <div className="flex items-center gap-3">
+          {saveState !== "idle" && (
+            <span className="text-sm text-muted-foreground">
+              {saveState === "saving" ? "Saving…" : "Saved ✓"}
+            </span>
+          )}
+          <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button>
               <Plus className="h-4 w-4" /> Add field
@@ -107,7 +121,8 @@ export default function IntakeFormsPage() {
               );
             })}
           </DropdownMenuContent>
-        </DropdownMenu>
+          </DropdownMenu>
+        </div>
       </div>
 
       <div className="space-y-2.5">

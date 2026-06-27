@@ -337,8 +337,8 @@ export function ServiceModal({
           <Button variant="secondary" onClick={() => onOpenChange(false)}>
             Cancel
           </Button>
-          <Button onClick={handleSave} disabled={!name.trim() || saving}>
-            {saving ? "Saving…" : isEdit ? "Save changes" : "Add service"}
+          <Button onClick={handleSave} loading={saving} disabled={!name.trim()}>
+            {isEdit ? "Save changes" : "Add service"}
           </Button>
         </DialogFooter>
       </DialogContent>

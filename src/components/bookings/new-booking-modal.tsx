@@ -179,8 +179,8 @@ export function NewBookingModal({
           <Button variant="secondary" onClick={() => onOpenChange(false)}>
             Cancel
           </Button>
-          <Button disabled={!canSubmit || saving} onClick={handleSubmit}>
-            {saving ? "Saving…" : "Add booking"}
+          <Button disabled={!canSubmit} loading={saving} onClick={handleSubmit}>
+            Add booking
           </Button>
         </DialogFooter>
       </DialogContent>

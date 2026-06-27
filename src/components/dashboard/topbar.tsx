@@ -27,9 +27,11 @@ export function Topbar({
   const router = useRouter();
   const [navOpen, setNavOpen] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [loggingOut, setLoggingOut] = useState(false);
   const bookingUrl = `slotwise.io/book/${username}`;
 
   async function handleLogout() {
+    setLoggingOut(true);
     await createClient().auth.signOut();
     router.push("/login");
   }
@@ -88,8 +90,9 @@ export function Topbar({
             </Link>
           </DropdownMenuItem>
           <DropdownMenuSeparator />
-          <DropdownMenuItem destructive onSelect={handleLogout}>
-            <LogOut className="h-4 w-4" /> Log out
+          <DropdownMenuItem destructive onSelect={handleLogout} disabled={loggingOut}>
+            <LogOut className={loggingOut ? "h-4 w-4 animate-spin" : "h-4 w-4"} />
+            {loggingOut ? "Logging out…" : "Log out"}
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>

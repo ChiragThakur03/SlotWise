@@ -294,8 +294,8 @@ function AddOverrideModal({ open, onOpenChange }: { open: boolean; onOpenChange:
           <Button variant="secondary" onClick={() => onOpenChange(false)}>
             Cancel
           </Button>
-          <Button onClick={handleSave} disabled={!date || saving}>
-            {saving ? "Saving…" : "Add override"}
+          <Button onClick={handleSave} loading={saving} disabled={!date}>
+            Add override
           </Button>
         </DialogFooter>
       </DialogContent>

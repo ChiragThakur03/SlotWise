@@ -49,6 +49,7 @@ export default function BookingsPage() {
   const [selectedBookingId, setSelectedBookingId] = useState<string | null>(null);
   const [cancelTarget, setCancelTarget] = useState<string | null>(null);
   const [bulkSent, setBulkSent] = useState(false);
+  const [sendingReminders, setSendingReminders] = useState(false);
 
   const services = store.services;
   function serviceDuration(serviceId: string) {
@@ -80,6 +81,7 @@ export default function BookingsPage() {
   }
 
   async function sendReminderToSelected() {
+    setSendingReminders(true);
     const targets = filtered.filter((b) => selected.has(b.id));
     const reminderTemplate = store.notificationTemplates.find((t) => t.type === "reminder_24h");
 
@@ -111,6 +113,7 @@ export default function BookingsPage() {
 
     store.logNotification(entries);
     setBulkSent(true);
+    setSendingReminders(false);
     setTimeout(() => setBulkSent(false), 2000);
   }
 
@@ -270,7 +273,7 @@ export default function BookingsPage() {
       {selected.size > 0 && (
         <div className="fixed bottom-6 left-1/2 z-30 flex -translate-x-1/2 items-center gap-3 rounded-card border-[0.5px] border-card-border bg-navy px-4 py-3 shadow-card">
           <span className="text-sm text-white">{selected.size} selected</span>
-          <Button size="sm" onClick={sendReminderToSelected}>
+          <Button size="sm" onClick={sendReminderToSelected} loading={sendingReminders} disabled={bulkSent}>
             <Send className="h-3.5 w-3.5" /> {bulkSent ? "Sent!" : "Send reminder to selected"}
           </Button>
           <Button size="sm" variant="secondary" onClick={exportSelected}>
