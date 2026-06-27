@@ -49,6 +49,17 @@ export function BookingFlow({
   const [submitting, setSubmitting] = useState(false);
   const [depositPaid, setDepositPaid] = useState(false);
 
+  function handleBookAnother() {
+    setStep(1);
+    setService(null);
+    setDate(null);
+    setTime(null);
+    setContact({ name: "", email: "", phone: "" });
+    setAnswers({});
+    setSignatures({});
+    setDepositPaid(false);
+  }
+
   const professionLabel = PROFESSIONS[profile.profession].label;
 
   function canContinueFromIntake() {
@@ -204,7 +215,13 @@ export function BookingFlow({
           )}
 
           {step === "confirmation" && service && startAt && (
-            <ConfirmationStep profile={profile} service={service} startAt={startAt} depositPaid={depositPaid} />
+            <ConfirmationStep
+              profile={profile}
+              service={service}
+              startAt={startAt}
+              depositPaid={depositPaid}
+              onBookAnother={handleBookAnother}
+            />
           )}
         </div>
       </div>

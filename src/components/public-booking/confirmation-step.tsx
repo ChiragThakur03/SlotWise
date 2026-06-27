@@ -1,6 +1,6 @@
 "use client";
 
-import { Check, Mail } from "lucide-react";
+import { Check, Mail, CalendarPlus } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { formatCents, formatDate, formatTime } from "@/lib/format";
@@ -12,11 +12,13 @@ export function ConfirmationStep({
   service,
   startAt,
   depositPaid,
+  onBookAnother,
 }: {
   profile: Profile;
   service: Service;
   startAt: Date;
   depositPaid: boolean;
+  onBookAnother: () => void;
 }) {
   const endAt = new Date(startAt.getTime() + service.durationMinutes * 60_000);
   const title = `${service.name} with ${profile.businessName}`;
@@ -82,8 +84,12 @@ export function ConfirmationStep({
       </div>
 
       <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
-        <Mail className="h-3.5 w-3.5" /> You&apos;ll also get SMS/email reminders before your appointment.
+        <Mail className="h-3.5 w-3.5" /> You&apos;ll also get a reminder email before your appointment.
       </p>
+
+      <Button className="w-full" variant="secondary" onClick={onBookAnother}>
+        <CalendarPlus className="h-4 w-4" /> Book another appointment
+      </Button>
     </div>
   );
 }
