@@ -318,12 +318,12 @@ async function run() {
   // ── Upcoming confirmed & pending ─────────────────────────────────────────
   book({ client: ryan,   service: sHalfDay, daysOffset: 2,  hour: 10, status: "confirmed" });
   book({ client: priya,  service: sSmall,   daysOffset: 3,  hour: 14, status: "confirmed" });
-  book({ client: marcus, service: sFlash,   daysOffset: 4,  hour: 13, status: "pending" });
+  book({ client: marcus, service: sFlash,   daysOffset: 4,  hour: 13, status: "pending", depositPaid: false });
   book({ client: maya,   service: sSmall,   daysOffset: 5,  hour: 15, status: "confirmed" });
   book({ client: jordan, service: sHalfDay, daysOffset: 7,  hour: 10, status: "confirmed" });
   book({ client: ethan,  service: sFlash,   daysOffset: 8,  hour: 11, status: "pending",   depositPaid: false });
   book({ client: nadia,  service: sHalfDay, daysOffset: 10, hour: 10, status: "confirmed" });
-  book({ client: tyler,  service: sFlash,   daysOffset: 12, hour: 13, status: "pending" });
+  book({ client: tyler,  service: sFlash,   daysOffset: 12, hour: 13, status: "pending", depositPaid: false });
   book({ client: isabel, service: sSmall,   daysOffset: 14, hour: 11, status: "confirmed" });
 
   const { error: bkgErr } = await admin.from("bookings").insert(bookingsPayload);
