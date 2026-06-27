@@ -83,6 +83,23 @@ export function AppStoreProvider({
 }) {
   const [state, setState] = React.useState<AppState>(initial);
 
+  // When the server re-fetches (e.g. router.refresh() on window focus),
+  // merge any new bookings/clients that arrived via the public booking page.
+  React.useEffect(() => {
+    setState((s) => {
+      const knownBookingIds = new Set(s.bookings.map((b) => b.id));
+      const knownClientIds = new Set(s.clients.map((c) => c.id));
+      const newBookings = initial.bookings.filter((b) => !knownBookingIds.has(b.id));
+      const newClients = initial.clients.filter((c) => !knownClientIds.has(c.id));
+      if (!newBookings.length && !newClients.length) return s;
+      return {
+        ...s,
+        bookings: [...newBookings, ...s.bookings],
+        clients: [...s.clients, ...newClients],
+      };
+    });
+  }, [initial]);
+
   const actions: AppActions = React.useMemo(
     () => ({
       // ── Sync mutations ──────────────────────────────────────────────────────

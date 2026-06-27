@@ -3,6 +3,7 @@ import { Sidebar } from "@/components/dashboard/sidebar";
 import { Topbar } from "@/components/dashboard/topbar";
 import { AppStoreProvider } from "@/lib/store/app-store";
 import { NavigationProgressProvider } from "@/components/navigation-progress";
+import { FocusRefresher } from "@/components/focus-refresher";
 import {
   getCurrentProfile,
   getServices,
@@ -59,6 +60,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
       }}
     >
       <NavigationProgressProvider>
+        <FocusRefresher />
         <div className="flex h-screen overflow-hidden bg-off-white">
           <Sidebar businessName={profile.businessName} profession={profile.profession} />
           <div className="flex min-w-0 flex-1 flex-col">
