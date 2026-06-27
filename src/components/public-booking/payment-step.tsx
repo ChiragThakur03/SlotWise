@@ -1,13 +1,15 @@
 "use client";
 
-import { useState } from "react";
-import { Lock } from "lucide-react";
+import { useEffect, useState } from "react";
+import { loadStripe } from "@stripe/stripe-js";
+import { Elements, CardElement, useStripe, useElements } from "@stripe/react-stripe-js";
+import { Lock, AlertCircle } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { formatCents, formatDate, formatTime } from "@/lib/format";
 import type { Profile, Service } from "@/lib/types";
+
+const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!);
 
 export function PaymentStep({
   profile,
@@ -24,21 +26,40 @@ export function PaymentStep({
   onConfirm: () => void;
   submitting: boolean;
 }) {
-  const [cardNumber, setCardNumber] = useState("");
-  const [expiry, setExpiry] = useState("");
-  const [cvc, setCvc] = useState("");
+  const [clientSecret, setClientSecret] = useState<string | null>(null);
+  const [fetchError, setFetchError] = useState<string | null>(null);
 
   const startAt = new Date(date);
   const [h, m] = time.split(":").map(Number);
   startAt.setHours(h, m, 0, 0);
 
   const hasDeposit = service.depositRequired && service.depositAmountCents > 0;
-  const canSubmit = cardNumber.length >= 12 && expiry.length >= 4 && cvc.length >= 3;
+
+  useEffect(() => {
+    if (!hasDeposit) return;
+    setClientSecret(null);
+    setFetchError(null);
+    fetch("/api/stripe/create-payment-intent", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        amountCents: service.depositAmountCents,
+        description: `Deposit — ${service.name} with ${profile.businessName}`,
+      }),
+    })
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.error) setFetchError(data.error);
+        else setClientSecret(data.clientSecret);
+      })
+      .catch(() => setFetchError("Could not initialise payment. Please try again."));
+  }, [hasDeposit, service.depositAmountCents, service.name, profile.businessName]);
 
   return (
     <div className="space-y-5">
       <h2 className="text-base font-medium text-navy">Confirm & pay</h2>
 
+      {/* Booking summary */}
       <Card>
         <p className="label-caption mb-2">Booking summary</p>
         <div className="space-y-1.5 text-sm">
@@ -51,54 +72,146 @@ export function PaymentStep({
             {hasDeposit && (
               <>
                 <Row label="Deposit due now" value={formatCents(service.depositAmountCents)} emphasize />
-                <Row label="Remaining at appointment" value={formatCents(service.priceCents - service.depositAmountCents)} />
+                <Row
+                  label="Remaining at appointment"
+                  value={formatCents(service.priceCents - service.depositAmountCents)}
+                />
               </>
             )}
           </div>
         </div>
       </Card>
 
+      {/* Payment section */}
       {hasDeposit ? (
-        <Card>
-          <div className="mb-3 flex items-center gap-1.5 text-sm text-muted-foreground">
-            <Lock className="h-3.5 w-3.5" /> Secure payment via Stripe
-          </div>
-          <div className="space-y-3">
-            <div>
-              <Label>Card number</Label>
-              <Input
-                className="mt-1.5"
-                inputMode="numeric"
-                placeholder="4242 4242 4242 4242"
-                value={cardNumber}
-                onChange={(e) => setCardNumber(e.target.value)}
+        <>
+          {fetchError ? (
+            <div className="flex items-start gap-2 rounded-card border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive">
+              <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+              {fetchError}
+            </div>
+          ) : !clientSecret ? (
+            <Card>
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <div className="h-4 w-4 animate-spin rounded-full border-2 border-teal border-t-transparent" />
+                Loading payment form…
+              </div>
+            </Card>
+          ) : (
+            <Elements
+              stripe={stripePromise}
+              options={{
+                clientSecret,
+                appearance: {
+                  theme: "stripe",
+                  variables: { colorPrimary: "#4ECDC4", colorText: "#1a2744", borderRadius: "8px" },
+                },
+              }}
+            >
+              <CardForm
+                clientSecret={clientSecret}
+                service={service}
+                onConfirm={onConfirm}
+                submitting={submitting}
               />
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <Label>Expiry</Label>
-                <Input className="mt-1.5" placeholder="MM / YY" value={expiry} onChange={(e) => setExpiry(e.target.value)} />
-              </div>
-              <div>
-                <Label>CVC</Label>
-                <Input className="mt-1.5" placeholder="123" value={cvc} onChange={(e) => setCvc(e.target.value)} />
-              </div>
-            </div>
-          </div>
-        </Card>
+            </Elements>
+          )}
+          <p className="text-center text-xs text-muted-foreground">
+            Your card is charged {formatCents(service.depositAmountCents)} now. Remaining{" "}
+            {formatCents(service.priceCents - service.depositAmountCents)} is paid at your appointment.
+          </p>
+        </>
       ) : (
-        <p className="text-sm text-muted-foreground">No deposit required. Payment is collected at your appointment.</p>
-      )}
-
-      <Button className="w-full" size="lg" disabled={hasDeposit && !canSubmit} onClick={onConfirm}>
-        {submitting ? "Processing…" : hasDeposit ? `Book & Pay ${formatCents(service.depositAmountCents)} Deposit` : "Confirm booking"}
-      </Button>
-      {hasDeposit && (
-        <p className="text-center text-xs text-muted-foreground">
-          Your card is charged {formatCents(service.depositAmountCents)} now. Remaining {formatCents(service.priceCents - service.depositAmountCents)} is paid at your appointment.
-        </p>
+        <>
+          <p className="text-sm text-muted-foreground">
+            No deposit required. Payment is collected at your appointment.
+          </p>
+          <Button className="w-full" size="lg" loading={submitting} onClick={onConfirm}>
+            Confirm booking
+          </Button>
+        </>
       )}
     </div>
+  );
+}
+
+function CardForm({
+  clientSecret,
+  service,
+  onConfirm,
+  submitting,
+}: {
+  clientSecret: string;
+  service: Service;
+  onConfirm: () => void;
+  submitting: boolean;
+}) {
+  const stripe = useStripe();
+  const elements = useElements();
+  const [cardError, setCardError] = useState<string | null>(null);
+  const [processing, setProcessing] = useState(false);
+
+  async function handlePay() {
+    if (!stripe || !elements || processing || submitting) return;
+    const cardElement = elements.getElement(CardElement);
+    if (!cardElement) return;
+
+    setCardError(null);
+    setProcessing(true);
+    try {
+      const { error, paymentIntent } = await stripe.confirmCardPayment(clientSecret, {
+        payment_method: { card: cardElement },
+      });
+
+      if (error) {
+        setCardError(error.message ?? "Payment failed. Please try again.");
+      } else if (paymentIntent?.status === "succeeded") {
+        onConfirm();
+      }
+    } finally {
+      setProcessing(false);
+    }
+  }
+
+  return (
+    <Card>
+      <div className="mb-3 flex items-center gap-1.5 text-sm text-muted-foreground">
+        <Lock className="h-3.5 w-3.5" /> Secure payment via Stripe
+      </div>
+
+      <div className="rounded-btn border border-input px-3 py-2.5">
+        <CardElement
+          options={{
+            style: {
+              base: {
+                fontSize: "14px",
+                color: "#1a2744",
+                fontFamily: "inherit",
+                "::placeholder": { color: "#9ca3af" },
+              },
+              invalid: { color: "#ef4444" },
+            },
+            hidePostalCode: true,
+          }}
+        />
+      </div>
+
+      {cardError && (
+        <p className="mt-2 flex items-center gap-1.5 text-sm text-destructive">
+          <AlertCircle className="h-3.5 w-3.5 shrink-0" /> {cardError}
+        </p>
+      )}
+
+      <Button
+        className="mt-4 w-full"
+        size="lg"
+        loading={processing || submitting}
+        disabled={!stripe}
+        onClick={handlePay}
+      >
+        Book & Pay {formatCents(service.depositAmountCents)} Deposit
+      </Button>
+    </Card>
   );
 }
 
