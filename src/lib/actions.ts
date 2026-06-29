@@ -616,3 +616,13 @@ export async function actionCreatePublicBooking(data: {
 
   return { bookingId: booking.id, clientId };
 }
+
+// Confirms a pending public booking after successful Stripe payment
+export async function actionConfirmPublicBookingDeposit(bookingId: string): Promise<void> {
+  const supabase = createAdminClient();
+  const { error } = await supabase
+    .from("bookings")
+    .update({ status: "confirmed", deposit_paid: true })
+    .eq("id", bookingId);
+  if (error) throw error;
+}

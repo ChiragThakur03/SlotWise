@@ -16,6 +16,7 @@ export function PaymentStep({
   service,
   date,
   time,
+  pendingBookingId,
   onConfirm,
   submitting,
 }: {
@@ -23,7 +24,8 @@ export function PaymentStep({
   service: Service;
   date: Date;
   time: string;
-  onConfirm: () => void;
+  pendingBookingId?: string | null;
+  onConfirm: (bookingId?: string) => void;
   submitting: boolean;
 }) {
   const [clientSecret, setClientSecret] = useState<string | null>(null);
@@ -45,6 +47,7 @@ export function PaymentStep({
       body: JSON.stringify({
         amountCents: service.depositAmountCents,
         description: `Deposit — ${service.name} with ${profile.businessName}`,
+        bookingId: pendingBookingId ?? undefined,
       }),
     })
       .then((r) => r.json())
@@ -53,7 +56,7 @@ export function PaymentStep({
         else setClientSecret(data.clientSecret);
       })
       .catch(() => setFetchError("Could not initialise payment. Please try again."));
-  }, [hasDeposit, service.depositAmountCents, service.name, profile.businessName]);
+  }, [hasDeposit, pendingBookingId, service.depositAmountCents, service.name, profile.businessName]);
 
   return (
     <div className="space-y-5">
@@ -111,6 +114,7 @@ export function PaymentStep({
               <CardForm
                 clientSecret={clientSecret}
                 service={service}
+                pendingBookingId={pendingBookingId}
                 onConfirm={onConfirm}
                 submitting={submitting}
               />
@@ -126,7 +130,7 @@ export function PaymentStep({
           <p className="text-sm text-muted-foreground">
             No deposit required. Payment is collected at your appointment.
           </p>
-          <Button className="w-full" size="lg" loading={submitting} onClick={onConfirm}>
+          <Button className="w-full" size="lg" loading={submitting} onClick={() => onConfirm()}>
             Confirm booking
           </Button>
         </>
@@ -138,12 +142,14 @@ export function PaymentStep({
 function CardForm({
   clientSecret,
   service,
+  pendingBookingId,
   onConfirm,
   submitting,
 }: {
   clientSecret: string;
   service: Service;
-  onConfirm: () => void;
+  pendingBookingId?: string | null;
+  onConfirm: (bookingId?: string) => void;
   submitting: boolean;
 }) {
   const stripe = useStripe();
@@ -166,7 +172,7 @@ function CardForm({
       if (error) {
         setCardError(error.message ?? "Payment failed. Please try again.");
       } else if (paymentIntent?.status === "succeeded") {
-        onConfirm();
+        onConfirm(pendingBookingId ?? undefined);
       }
     } finally {
       setProcessing(false);

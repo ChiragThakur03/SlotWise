@@ -15,7 +15,7 @@ import { cn } from "@/lib/utils";
 import { sendNotification } from "@/lib/send-notification-client";
 import type { TemplateVariables } from "@/lib/render-template";
 import { formatCents, formatDate, formatTime } from "@/lib/format";
-import { actionCreatePublicBooking } from "@/lib/actions";
+import { actionCreatePublicBooking, actionConfirmPublicBookingDeposit } from "@/lib/actions";
 import type { AvailabilityRule, Booking, DateOverride, IntakeForm, Profile, Service } from "@/lib/types";
 
 const CONFIRMATION_SUBJECT = "You're booked with {pro_name} — {service} on {date}";
@@ -48,6 +48,7 @@ export function BookingFlow({
   const [signatures, setSignatures] = useState<SignatureAnswers>({});
   const [submitting, setSubmitting] = useState(false);
   const [depositPaid, setDepositPaid] = useState(false);
+  const [pendingBookingId, setPendingBookingId] = useState<string | null>(null);
 
   function handleBookAnother() {
     setStep(1);
@@ -58,6 +59,7 @@ export function BookingFlow({
     setAnswers({});
     setSignatures({});
     setDepositPaid(false);
+    setPendingBookingId(null);
   }
 
   const professionLabel = PROFESSIONS[profile.profession].label;
@@ -77,7 +79,42 @@ export function BookingFlow({
     return true;
   }
 
-  async function handleConfirmPayment() {
+  // Pre-creates a pending booking before showing the Stripe payment form so
+  // the bookingId can be stored in payment intent metadata for webhook reliability.
+  async function handleGoToPayment() {
+    if (!service || !date || !time) return;
+    const hasDeposit = service.depositRequired && service.depositAmountCents > 0;
+    if (hasDeposit && !pendingBookingId) {
+      setSubmitting(true);
+      try {
+        const startAt = new Date(date);
+        const [h, m] = time.split(":").map(Number);
+        startAt.setHours(h, m, 0, 0);
+        const endAt = new Date(startAt.getTime() + service.durationMinutes * 60000);
+        const { bookingId } = await actionCreatePublicBooking({
+          username: profile.username,
+          serviceId: service.id,
+          clientName: contact.name,
+          clientEmail: contact.email,
+          clientPhone: contact.phone,
+          startAt: startAt.toISOString(),
+          endAt: endAt.toISOString(),
+          totalPriceCents: service.priceCents,
+          depositAmountCents: service.depositAmountCents,
+          depositPaid: false,
+          clientNotes: "",
+        });
+        setPendingBookingId(bookingId);
+      } catch (err) {
+        console.error("Could not pre-create booking:", err);
+      } finally {
+        setSubmitting(false);
+      }
+    }
+    setStep(4);
+  }
+
+  async function handleConfirmPayment(confirmedBookingId?: string) {
     if (!service || !date || !time || submitting) return;
     setSubmitting(true);
     try {
@@ -85,23 +122,29 @@ export function BookingFlow({
       const [h, m] = time.split(":").map(Number);
       startAt.setHours(h, m, 0, 0);
       const endAt = new Date(startAt.getTime() + service.durationMinutes * 60000);
-
       const paidDeposit = service.depositRequired && service.depositAmountCents > 0;
-      await actionCreatePublicBooking({
-        username: profile.username,
-        serviceId: service.id,
-        clientName: contact.name,
-        clientEmail: contact.email,
-        clientPhone: contact.phone,
-        startAt: startAt.toISOString(),
-        endAt: endAt.toISOString(),
-        totalPriceCents: service.priceCents,
-        depositAmountCents: paidDeposit ? service.depositAmountCents : 0,
-        depositPaid: paidDeposit,
-        clientNotes: "",
-      });
 
-      setDepositPaid(!!service.depositRequired && service.depositAmountCents > 0);
+      if (confirmedBookingId) {
+        // Stripe payment succeeded — confirm the pre-created pending booking
+        await actionConfirmPublicBookingDeposit(confirmedBookingId);
+      } else {
+        // No deposit service — create the booking fresh
+        await actionCreatePublicBooking({
+          username: profile.username,
+          serviceId: service.id,
+          clientName: contact.name,
+          clientEmail: contact.email,
+          clientPhone: contact.phone,
+          startAt: startAt.toISOString(),
+          endAt: endAt.toISOString(),
+          totalPriceCents: service.priceCents,
+          depositAmountCents: 0,
+          depositPaid: false,
+          clientNotes: "",
+        });
+      }
+
+      setDepositPaid(paidDeposit);
       setStep("confirmation");
 
       const variables: TemplateVariables = {
@@ -171,7 +214,7 @@ export function BookingFlow({
         )}
 
         <div className="rounded-card border-[0.5px] border-card-border bg-white p-4 sm:p-6">
-          {step === 1 && <ServiceStep services={services} onSelect={(s) => { setService(s); setStep(2); }} />}
+          {step === 1 && <ServiceStep services={services} onSelect={(s) => { setService(s); setPendingBookingId(null); setStep(2); }} />}
 
           {step === 2 && service && (
             <>
@@ -184,7 +227,7 @@ export function BookingFlow({
                 minNoticeHours={profile.minNoticeHours}
                 selectedDate={date}
                 selectedTime={time}
-                onSelectDate={(d) => { setDate(d); setTime(null); }}
+                onSelectDate={(d) => { setDate(d); setTime(null); setPendingBookingId(null); }}
                 onSelectTime={setTime}
               />
               <Button className="mt-5 w-full" size="lg" disabled={!date || !time} onClick={() => setStep(3)}>
@@ -204,14 +247,14 @@ export function BookingFlow({
                 signatures={signatures}
                 onSignatureChange={(id, name) => setSignatures((s) => ({ ...s, [id]: name }))}
               />
-              <Button className="mt-5 w-full" size="lg" disabled={!canContinueFromIntake()} onClick={() => setStep(4)}>
+              <Button className="mt-5 w-full" size="lg" disabled={!canContinueFromIntake()} loading={submitting} onClick={handleGoToPayment}>
                 Continue
               </Button>
             </>
           )}
 
           {step === 4 && service && date && time && (
-            <PaymentStep profile={profile} service={service} date={date} time={time} onConfirm={handleConfirmPayment} submitting={submitting} />
+            <PaymentStep profile={profile} service={service} date={date} time={time} pendingBookingId={pendingBookingId} onConfirm={handleConfirmPayment} submitting={submitting} />
           )}
 
           {step === "confirmation" && service && startAt && (

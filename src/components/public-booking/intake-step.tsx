@@ -1,5 +1,7 @@
 "use client";
 
+import { useState } from "react";
+import { createClient } from "@/lib/supabase/client";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
@@ -199,17 +201,68 @@ function IntakeField({
       );
     }
     case "file_upload":
-      return (
-        <div>
-          {label}
-          <input
-            type="file"
-            className="mt-1.5 block w-full text-sm text-muted-foreground file:mr-3 file:rounded-btn file:border-0 file:bg-teal-light file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-accent-foreground"
-            onChange={(e) => onChange(e.target.files?.[0]?.name ?? "")}
-          />
-        </div>
-      );
+      return <FileUploadField field={field} value={value} onChange={onChange} />;
     default:
       return null;
   }
+}
+
+function FileUploadField({
+  field,
+  value,
+  onChange,
+}: {
+  field: IntakeFormField;
+  value: string | string[] | boolean | undefined;
+  onChange: (value: string) => void;
+}) {
+  const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+
+  async function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploading(true);
+    setUploadError(null);
+    try {
+      const supabase = createClient();
+      const ext = file.name.split(".").pop() ?? "bin";
+      const path = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+      const { error } = await supabase.storage.from("intake-uploads").upload(path, file);
+      if (error) {
+        setUploadError("Upload failed: " + error.message);
+        return;
+      }
+      const { data: { publicUrl } } = supabase.storage.from("intake-uploads").getPublicUrl(path);
+      onChange(publicUrl);
+    } catch {
+      setUploadError("Upload failed. Please try again.");
+    } finally {
+      setUploading(false);
+    }
+  }
+
+  return (
+    <div>
+      <Label>
+        {field.label} {field.required && <span className="text-destructive">*</span>}
+      </Label>
+      <input
+        type="file"
+        disabled={uploading}
+        className="mt-1.5 block w-full text-sm text-muted-foreground file:mr-3 file:rounded-btn file:border-0 file:bg-teal-light file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-accent-foreground disabled:opacity-50"
+        onChange={handleFile}
+      />
+      {uploading && (
+        <p className="mt-1.5 flex items-center gap-1.5 text-xs text-muted-foreground">
+          <span className="inline-block h-3 w-3 animate-spin rounded-full border-2 border-teal border-t-transparent" />
+          Uploading…
+        </p>
+      )}
+      {uploadError && <p className="mt-1.5 text-xs text-destructive">{uploadError}</p>}
+      {!uploading && !uploadError && typeof value === "string" && value && (
+        <p className="mt-1.5 text-xs text-teal">✓ File uploaded successfully</p>
+      )}
+    </div>
+  );
 }

@@ -63,8 +63,8 @@ export function BookingDetailSheet({
         clientName: client!.name,
         type: "custom",
         channel,
-        status: result.configured && !result.sent ? "failed" : "sent",
-        errorMessage: result.configured && !result.sent ? result.error ?? null : null,
+        status: result.sent ? "sent" : "failed",
+        errorMessage: result.sent ? null : result.error ?? null,
       },
     ]);
     setShowReminder(false);

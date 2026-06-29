@@ -105,8 +105,8 @@ export default function BookingsPage() {
           clientName: b.clientName,
           type: "custom" as const,
           channel: (reminderTemplate?.channel ?? "both") as "email" | "sms" | "both",
-          status: (result.configured && !result.sent ? "failed" : "sent") as "sent" | "failed",
-          errorMessage: result.configured && !result.sent ? result.error ?? null : null,
+          status: (result.sent ? "sent" : "failed") as "sent" | "failed",
+          errorMessage: result.sent ? null : result.error ?? null,
         };
       })
     );

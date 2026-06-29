@@ -84,18 +84,25 @@ export function AppStoreProvider({
   const [state, setState] = React.useState<AppState>(initial);
 
   // When the server re-fetches (e.g. router.refresh() on window focus),
-  // merge any new bookings/clients that arrived via the public booking page.
+  // merge new bookings/clients and refresh existing client data (name/phone may
+  // have changed via a public booking with the same email).
   React.useEffect(() => {
     setState((s) => {
+      const freshClientById = new Map(initial.clients.map((c) => [c.id, c]));
       const knownBookingIds = new Set(s.bookings.map((b) => b.id));
       const knownClientIds = new Set(s.clients.map((c) => c.id));
+
       const newBookings = initial.bookings.filter((b) => !knownBookingIds.has(b.id));
       const newClients = initial.clients.filter((c) => !knownClientIds.has(c.id));
-      if (!newBookings.length && !newClients.length) return s;
+      const refreshedClients = s.clients.map((c) => freshClientById.get(c.id) ?? c);
+
+      const clientsChanged = refreshedClients.some((c, i) => c !== s.clients[i]);
+      if (!newBookings.length && !newClients.length && !clientsChanged) return s;
+
       return {
         ...s,
-        bookings: [...newBookings, ...s.bookings],
-        clients: [...s.clients, ...newClients],
+        bookings: newBookings.length ? [...newBookings, ...s.bookings] : s.bookings,
+        clients: [...newClients, ...refreshedClients],
       };
     });
   }, [initial]);

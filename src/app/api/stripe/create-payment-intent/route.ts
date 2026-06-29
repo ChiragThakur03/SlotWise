@@ -7,7 +7,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Stripe isn't configured — add STRIPE_SECRET_KEY." }, { status: 500 });
   }
 
-  const { amountCents, description } = await request.json();
+  const { amountCents, description, bookingId } = await request.json();
   if (!amountCents || amountCents < 50) {
     return NextResponse.json({ error: "Invalid amount." }, { status: 400 });
   }
@@ -18,6 +18,7 @@ export async function POST(request: Request) {
       currency: "usd",
       description,
       automatic_payment_methods: { enabled: true },
+      metadata: { bookingId: bookingId ?? "" },
     });
     return NextResponse.json({ clientSecret: intent.client_secret });
   } catch (err) {
