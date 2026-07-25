@@ -33,7 +33,8 @@ export function Topbar({
   async function handleLogout() {
     setLoggingOut(true);
     await createClient().auth.signOut();
-    router.push("/login");
+    router.push("/dashboard");
+    setLoggingOut(false);
   }
 
   function copyLink() {

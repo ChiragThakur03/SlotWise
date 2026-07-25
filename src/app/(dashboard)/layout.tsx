@@ -4,6 +4,7 @@ import { Topbar } from "@/components/dashboard/topbar";
 import { AppStoreProvider } from "@/lib/store/app-store";
 import { NavigationProgressProvider } from "@/components/navigation-progress";
 import { FocusRefresher } from "@/components/focus-refresher";
+import { Toaster } from "@/components/ui/toaster";
 import {
   getCurrentProfile,
   getServices,
@@ -70,6 +71,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
             </main>
           </div>
         </div>
+        <Toaster />
       </NavigationProgressProvider>
     </AppStoreProvider>
   );

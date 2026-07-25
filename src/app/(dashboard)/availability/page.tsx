@@ -20,6 +20,7 @@ import { ConfirmDialog } from "@/components/confirm-dialog";
 import { useAppStore } from "@/lib/store/app-store";
 import { WEEKDAY_LABELS } from "@/lib/calendar";
 import { formatDate } from "@/lib/format";
+import { toast } from "@/lib/toast";
 import type { AvailabilityRule } from "@/lib/types";
 
 const BUFFER_OPTIONS = [0, 10, 15, 30];
@@ -31,6 +32,7 @@ export default function AvailabilityPage() {
 
   function updateRule(weekday: number, patch: Partial<AvailabilityRule>) {
     store.setAvailability(store.availability.map((r) => (r.weekday === weekday ? { ...r, ...patch } : r)));
+    toast("Saved", "success", "availability");
   }
 
   function addBreak(weekday: number) {
@@ -166,7 +168,7 @@ export default function AvailabilityPage() {
                   min={1}
                   className="w-24"
                   value={store.profile.advanceBookingDays}
-                  onChange={(e) => store.updateProfile({ advanceBookingDays: Number(e.target.value) })}
+                  onChange={(e) => { store.updateProfile({ advanceBookingDays: Number(e.target.value) }); toast("Saved", "success", "settings"); }}
                 />
                 <span className="text-sm text-muted-foreground">days out</span>
               </div>
@@ -179,7 +181,7 @@ export default function AvailabilityPage() {
                   min={0}
                   className="w-24"
                   value={store.profile.minNoticeHours}
-                  onChange={(e) => store.updateProfile({ minNoticeHours: Number(e.target.value) })}
+                  onChange={(e) => { store.updateProfile({ minNoticeHours: Number(e.target.value) }); toast("Saved", "success", "settings"); }}
                 />
                 <span className="text-sm text-muted-foreground">hours before booking</span>
               </div>
@@ -192,7 +194,7 @@ export default function AvailabilityPage() {
           <Label>Gap automatically added between appointments</Label>
           <Select
             value={String(store.profile.bufferMinutes)}
-            onValueChange={(v) => store.updateProfile({ bufferMinutes: Number(v) })}
+            onValueChange={(v) => { store.updateProfile({ bufferMinutes: Number(v) }); toast("Saved", "success", "settings"); }}
           >
             <SelectTrigger className="mt-1.5 w-44">
               <SelectValue />

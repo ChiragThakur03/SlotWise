@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { useAppStore } from "@/lib/store/app-store";
 import { ACCENT_COLORS } from "@/lib/accent-colors";
 import { cn } from "@/lib/utils";
+import { toast } from "@/lib/toast";
 
 export function BookingPageTab() {
   const store = useAppStore();
@@ -24,7 +25,7 @@ export function BookingPageTab() {
             <Input
               className="max-w-[200px]"
               defaultValue={profile.username}
-              onBlur={(e) => store.updateProfile({ username: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, "") })}
+              onBlur={(e) => { store.updateProfile({ username: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, "") }); toast("Saved", "success", "settings"); }}
             />
           </div>
         </div>
@@ -42,7 +43,7 @@ export function BookingPageTab() {
           {ACCENT_COLORS.map((c) => (
             <button
               key={c.id}
-              onClick={() => store.updateProfile({ accentColor: c.id })}
+              onClick={() => { store.updateProfile({ accentColor: c.id }); toast("Saved", "success", "settings"); }}
               className={cn(
                 "h-9 w-9 rounded-full border-2 transition-transform",
                 profile.accentColor === c.id ? "scale-110 border-navy" : "border-transparent"
@@ -61,7 +62,7 @@ export function BookingPageTab() {
             <p className="text-sm font-medium text-navy">Show social links</p>
             <p className="text-xs text-muted-foreground">Display your social links on your booking page header.</p>
           </div>
-          <Switch checked={profile.showSocialLinks} onCheckedChange={(v) => store.updateProfile({ showSocialLinks: v })} />
+          <Switch checked={profile.showSocialLinks} onCheckedChange={(v) => { store.updateProfile({ showSocialLinks: v }); toast("Saved", "success", "settings"); }} />
         </div>
       </Card>
     </div>

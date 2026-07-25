@@ -3,6 +3,7 @@
 import { Card } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { useAppStore } from "@/lib/store/app-store";
+import { toast } from "@/lib/toast";
 
 const ROWS = [
   { key: "proNotifyNewBooking" as const, label: "New booking", description: "When a client books an appointment" },
@@ -22,7 +23,7 @@ export function NotificationsTab() {
             <p className="text-sm font-medium text-navy">{row.label}</p>
             <p className="text-xs text-muted-foreground">{row.description}</p>
           </div>
-          <Switch checked={profile[row.key]} onCheckedChange={(v) => store.updateProfile({ [row.key]: v })} />
+          <Switch checked={profile[row.key]} onCheckedChange={(v) => { store.updateProfile({ [row.key]: v }); toast("Saved", "success", "settings"); }} />
         </div>
       ))}
     </Card>

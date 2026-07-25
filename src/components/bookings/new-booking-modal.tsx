@@ -22,6 +22,7 @@ import {
 } from "@/components/ui/select";
 import { useAppStore } from "@/lib/store/app-store";
 import { formatCents, formatDuration } from "@/lib/format";
+import { toast } from "@/lib/toast";
 
 const NEW_CLIENT = "__new__";
 
@@ -98,6 +99,7 @@ export function NewBookingModal({
       });
       onOpenChange(false);
       setNotes("");
+      toast("Booking added");
     } finally {
       setSaving(false);
     }

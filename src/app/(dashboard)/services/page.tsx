@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { ServiceModal } from "@/components/services/service-modal";
 import { useAppStore } from "@/lib/store/app-store";
 import { formatCents, formatDuration } from "@/lib/format";
+import { toast } from "@/lib/toast";
 import type { Service } from "@/lib/types";
 
 export default function ServicesPage() {
@@ -49,7 +50,7 @@ export default function ServicesPage() {
                     <p className="font-medium text-navy">{service.name}</p>
                     <p className="mt-0.5 text-xs text-muted-foreground">{formatDuration(service.durationMinutes)}</p>
                   </div>
-                  <Switch checked={service.active} onCheckedChange={(v) => store.updateService(service.id, { active: v })} />
+                  <Switch checked={service.active} onCheckedChange={(v) => { store.updateService(service.id, { active: v }); toast(v ? "Service activated" : "Service deactivated", "success", "service-toggle"); }} />
                 </div>
 
                 {service.description && <p className="mt-2 text-sm text-muted-foreground">{service.description}</p>}

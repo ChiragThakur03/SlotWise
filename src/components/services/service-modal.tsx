@@ -17,6 +17,7 @@ import { Switch } from "@/components/ui/switch";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 import { useState } from "react";
 import { useAppStore } from "@/lib/store/app-store";
+import { toast } from "@/lib/toast";
 import type { Service, ServiceExtra } from "@/lib/types";
 
 const DURATION_PRESETS = [30, 45, 60, 90, 120];
@@ -119,6 +120,7 @@ export function ServiceModal({
       if (isEdit) store.updateService(service!.id, payload);
       else await store.addService(payload);
       onOpenChange(false);
+      toast(isEdit ? "Service updated" : "Service added");
     } finally {
       setSaving(false);
     }

@@ -16,6 +16,7 @@ import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@
 import { Avatar } from "@/components/ui/avatar";
 import { useAppStore } from "@/lib/store/app-store";
 import { formatDateTime } from "@/lib/format";
+import { toast } from "@/lib/toast";
 import type { NotificationChannel, NotificationTemplate, NotificationType } from "@/lib/types";
 
 const VARIABLES = "{client_name} {service} {date} {time} {deposit_amount} {booking_link}";
@@ -122,7 +123,7 @@ function ReminderCard({ title, template }: { title: string; template: Notificati
         <p className="font-medium text-navy">{title}</p>
         <Switch
           checked={template.enabled}
-          onCheckedChange={(v) => store.updateNotificationTemplate(template.id, { enabled: v })}
+          onCheckedChange={(v) => { store.updateNotificationTemplate(template.id, { enabled: v }); toast("Saved", "success", "settings"); }}
         />
       </div>
 
@@ -132,7 +133,7 @@ function ReminderCard({ title, template }: { title: string; template: Notificati
             <Label>Channel</Label>
             <Select
               value={template.channel}
-              onValueChange={(v) => store.updateNotificationTemplate(template.id, { channel: v as NotificationChannel })}
+              onValueChange={(v) => { store.updateNotificationTemplate(template.id, { channel: v as NotificationChannel }); toast("Saved", "success", "settings"); }}
             >
               <SelectTrigger className="mt-1.5 w-48">
                 <SelectValue />
@@ -152,7 +153,7 @@ function ReminderCard({ title, template }: { title: string; template: Notificati
                 className="mt-1.5"
                 rows={1}
                 defaultValue={template.subject}
-                onBlur={(e) => store.updateNotificationTemplate(template.id, { subject: e.target.value })}
+                onBlur={(e) => { store.updateNotificationTemplate(template.id, { subject: e.target.value }); toast("Saved", "success", "settings"); }}
               />
             </div>
           )}
@@ -163,7 +164,7 @@ function ReminderCard({ title, template }: { title: string; template: Notificati
               className="mt-1.5"
               rows={4}
               defaultValue={template.body}
-              onBlur={(e) => store.updateNotificationTemplate(template.id, { body: e.target.value })}
+              onBlur={(e) => { store.updateNotificationTemplate(template.id, { body: e.target.value }); toast("Saved", "success", "settings"); }}
             />
             <p className="mt-1.5 text-xs text-muted-foreground">Variables: {VARIABLES}</p>
           </div>

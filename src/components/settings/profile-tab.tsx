@@ -9,6 +9,7 @@ import { Avatar } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { useAppStore } from "@/lib/store/app-store";
 import { PROFESSIONS } from "@/lib/verticals";
+import { toast } from "@/lib/toast";
 
 export function ProfileTab() {
   const store = useAppStore();
@@ -34,7 +35,7 @@ export function ProfileTab() {
           <Input
             className="mt-1.5"
             defaultValue={profile.businessName}
-            onBlur={(e) => store.updateProfile({ businessName: e.target.value })}
+            onBlur={(e) => { store.updateProfile({ businessName: e.target.value }); toast("Saved", "success", "settings"); }}
           />
         </div>
         <div>
@@ -43,7 +44,7 @@ export function ProfileTab() {
             className="mt-1.5"
             rows={3}
             defaultValue={profile.bio}
-            onBlur={(e) => store.updateProfile({ bio: e.target.value })}
+            onBlur={(e) => { store.updateProfile({ bio: e.target.value }); toast("Saved", "success", "settings"); }}
           />
         </div>
         <div>
@@ -57,7 +58,7 @@ export function ProfileTab() {
           <Input
             className="mt-1.5"
             defaultValue={profile.location ?? ""}
-            onBlur={(e) => store.updateProfile({ location: e.target.value })}
+            onBlur={(e) => { store.updateProfile({ location: e.target.value }); toast("Saved", "success", "settings"); }}
           />
         </div>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -67,7 +68,7 @@ export function ProfileTab() {
               className="mt-1.5"
               type="email"
               defaultValue={profile.contactEmail ?? ""}
-              onBlur={(e) => store.updateProfile({ contactEmail: e.target.value })}
+              onBlur={(e) => { store.updateProfile({ contactEmail: e.target.value }); toast("Saved", "success", "settings"); }}
             />
           </div>
           <div>
@@ -76,7 +77,7 @@ export function ProfileTab() {
               className="mt-1.5"
               type="tel"
               defaultValue={profile.contactPhone ?? ""}
-              onBlur={(e) => store.updateProfile({ contactPhone: e.target.value })}
+              onBlur={(e) => { store.updateProfile({ contactPhone: e.target.value }); toast("Saved", "success", "settings"); }}
             />
           </div>
         </div>

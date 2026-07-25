@@ -14,6 +14,7 @@ import { useAppStore } from "@/lib/store/app-store";
 import { formatCents, formatDate, formatDuration, formatTime } from "@/lib/format";
 import { sendNotification } from "@/lib/send-notification-client";
 import { buildBookingVariables } from "@/lib/render-template";
+import { toast } from "@/lib/toast";
 
 export function BookingDetailSheet({
   bookingId,
@@ -30,6 +31,7 @@ export function BookingDetailSheet({
   const [showReminder, setShowReminder] = useState(false);
   const [reminderMessage, setReminderMessage] = useState("");
   const [proNotesDraft, setProNotesDraft] = useState<string | null>(null);
+  const [sendingReminder, setSendingReminder] = useState(false);
 
   const booking = store.bookings.find((b) => b.id === bookingId) ?? null;
   const service = booking ? store.services.find((s) => s.id === booking.serviceId) : null;
@@ -46,6 +48,7 @@ export function BookingDetailSheet({
   }
 
   async function sendReminder() {
+    setSendingReminder(true);
     const channel = reminderTemplate?.channel ?? "both";
     const result = await sendNotification(
       channel,
@@ -67,7 +70,9 @@ export function BookingDetailSheet({
         errorMessage: result.sent ? null : result.error ?? null,
       },
     ]);
+    setSendingReminder(false);
     setShowReminder(false);
+    toast(result.sent ? "Reminder sent!" : "Failed to send reminder", result.sent ? "success" : "error");
   }
 
   return (
@@ -162,7 +167,7 @@ export function BookingDetailSheet({
                 <Button variant="ghost" size="sm" onClick={() => setShowReminder(false)}>
                   Cancel
                 </Button>
-                <Button size="sm" onClick={sendReminder}>
+                <Button size="sm" onClick={sendReminder} loading={sendingReminder}>
                   Send now
                 </Button>
               </div>

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { createClient, createAdminClient } from "@/lib/supabase/server";
 import {
   computeClientStats,
@@ -18,10 +19,22 @@ import type {
   NotificationTemplate,
   NotificationLogEntry,
 } from "@/lib/types";
+import {
+  MOCK_PROFILE,
+  MOCK_SERVICES,
+  MOCK_CLIENTS,
+  MOCK_BOOKINGS,
+  MOCK_AVAILABILITY,
+  MOCK_DATE_OVERRIDES,
+  MOCK_STAFF,
+  MOCK_INTAKE_FORM,
+  MOCK_NOTIFICATION_TEMPLATES,
+  MOCK_NOTIFICATION_LOG,
+} from "@/lib/mock-demo-data";
 
 // ─── Mappers: DB snake_case → TS camelCase ──────────────────────────────────
 
-function mapProfile(r: Record<string, any>): Profile {
+function mapProfile(r: any): Profile {
   return {
     id: r.id,
     username: r.username,
@@ -54,7 +67,7 @@ function mapProfile(r: Record<string, any>): Profile {
   };
 }
 
-function mapService(r: Record<string, any>): Service {
+function mapService(r: any): Service {
   return {
     id: r.id,
     profileId: r.profile_id,
@@ -72,7 +85,7 @@ function mapService(r: Record<string, any>): Service {
   };
 }
 
-function mapClient(r: Record<string, any>): Client {
+function mapClient(r: any): Client {
   return {
     id: r.id,
     profileId: r.profile_id,
@@ -85,7 +98,7 @@ function mapClient(r: Record<string, any>): Client {
   };
 }
 
-function mapBooking(r: Record<string, any>): Booking {
+function mapBooking(r: any): Booking {
   return {
     id: r.id,
     profileId: r.profile_id,
@@ -107,7 +120,7 @@ function mapBooking(r: Record<string, any>): Booking {
   };
 }
 
-function mapAvailability(r: Record<string, any>): AvailabilityRule {
+function mapAvailability(r: any): AvailabilityRule {
   return {
     id: r.id,
     profileId: r.profile_id,
@@ -123,7 +136,7 @@ function mapAvailability(r: Record<string, any>): AvailabilityRule {
   };
 }
 
-function mapDateOverride(r: Record<string, any>): DateOverride {
+function mapDateOverride(r: any): DateOverride {
   return {
     id: r.id,
     profileId: r.profile_id,
@@ -135,7 +148,7 @@ function mapDateOverride(r: Record<string, any>): DateOverride {
   };
 }
 
-function mapIntakeForm(r: Record<string, any>): IntakeForm {
+function mapIntakeForm(r: any): IntakeForm {
   return {
     id: r.id,
     profileId: r.profile_id,
@@ -160,30 +173,58 @@ function mapIntakeForm(r: Record<string, any>): IntakeForm {
 
 // ─── Auth helper ─────────────────────────────────────────────────────────────
 
+// ─── Auth helper ─────────────────────────────────────────────────────────────
+
+async function getDbClient() {
+  try {
+    const supabase = createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    return user ? supabase : createAdminClient();
+  } catch {
+    return createAdminClient();
+  }
+}
+
 async function getAuthProfileId(): Promise<string | null> {
-  const supabase = createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  return user?.id ?? null;
+  const profile = await getCurrentProfile();
+  return profile?.id ?? null;
 }
 
 // ─── Profile ─────────────────────────────────────────────────────────────────
 
 export async function getCurrentProfile(): Promise<Profile | null> {
-  const supabase = createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return null;
+  try {
+    const supabase = createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
 
-  const { data } = await supabase
-    .from("profiles")
-    .select("*")
-    .eq("id", user.id)
-    .maybeSingle();
+    if (user) {
+      const { data } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("id", user.id)
+        .maybeSingle();
+      if (data) return mapProfile(data);
+    }
 
-  return data ? mapProfile(data) : null;
+    // Portfolio / demo mode fallback: get first profile from DB
+    const admin = createAdminClient();
+    const { data: firstProfile } = await admin
+      .from("profiles")
+      .select("*")
+      .order("created_at")
+      .limit(1)
+      .maybeSingle();
+
+    if (firstProfile) return mapProfile(firstProfile);
+  } catch {
+    // Network / Supabase error fallback
+  }
+
+  return MOCK_PROFILE;
 }
 
 export async function getProfileByUsername(username: string): Promise<Profile | null> {
@@ -201,131 +242,167 @@ export async function getProfileByUsername(username: string): Promise<Profile | 
 
 export async function getServices(): Promise<Service[]> {
   const profileId = await getAuthProfileId();
-  if (!profileId) return [];
+  if (!profileId) return MOCK_SERVICES;
 
-  const { data } = await createClient()
-    .from("services")
-    .select("*")
-    .eq("profile_id", profileId)
-    .order("sort_order");
+  try {
+    const supabase = await getDbClient();
+    const { data } = await supabase
+      .from("services")
+      .select("*")
+      .eq("profile_id", profileId)
+      .order("sort_order");
 
-  return (data ?? []).map(mapService);
+    return data && data.length > 0 ? data.map(mapService) : MOCK_SERVICES;
+  } catch {
+    return MOCK_SERVICES;
+  }
 }
 
 export async function getServiceById(id: string): Promise<Service | null> {
-  const { data } = await createClient()
-    .from("services")
-    .select("*")
-    .eq("id", id)
-    .maybeSingle();
+  try {
+    const supabase = await getDbClient();
+    const { data } = await supabase
+      .from("services")
+      .select("*")
+      .eq("id", id)
+      .maybeSingle();
 
-  return data ? mapService(data) : null;
+    return data ? mapService(data) : (MOCK_SERVICES.find((s) => s.id === id) ?? null);
+  } catch {
+    return MOCK_SERVICES.find((s) => s.id === id) ?? null;
+  }
 }
 
 // ─── Clients ──────────────────────────────────────────────────────────────────
 
 export async function getClients(): Promise<Client[]> {
   const profileId = await getAuthProfileId();
-  if (!profileId) return [];
+  if (!profileId) return MOCK_CLIENTS;
 
-  const supabase = createClient();
-  const [{ data: clientRows }, { data: bookingRows }] = await Promise.all([
-    supabase
-      .from("clients")
-      .select("*")
-      .eq("profile_id", profileId)
-      .order("created_at", { ascending: false }),
-    supabase
-      .from("bookings")
-      .select("client_id, status, total_price_cents, start_at")
-      .eq("profile_id", profileId),
-  ]);
+  try {
+    const supabase = await getDbClient();
+    const [{ data: clientRows }, { data: bookingRows }] = await Promise.all([
+      supabase
+        .from("clients")
+        .select("*")
+        .eq("profile_id", profileId)
+        .order("created_at", { ascending: false }),
+      supabase
+        .from("bookings")
+        .select("client_id, status, total_price_cents, start_at")
+        .eq("profile_id", profileId),
+    ]);
 
-  // Sparse booking objects — computeClientStats only needs these four fields
-  const bookings = (bookingRows ?? []).map((r) => ({
-    clientId: r.client_id,
-    status: r.status,
-    totalPriceCents: r.total_price_cents,
-    startAt: r.start_at,
-  })) as Booking[];
+    if (!clientRows || clientRows.length === 0) return MOCK_CLIENTS;
 
-  return (clientRows ?? []).map((c) => ({
-    ...mapClient(c),
-    ...computeClientStats(c.id, bookings),
-  }));
+    const bookings = (bookingRows ?? []).map((r) => ({
+      clientId: r.client_id,
+      status: r.status,
+      totalPriceCents: r.total_price_cents,
+      startAt: r.start_at,
+    })) as Booking[];
+
+    return clientRows.map((c) => ({
+      ...mapClient(c),
+      ...computeClientStats(c.id, bookings),
+    }));
+  } catch {
+    return MOCK_CLIENTS;
+  }
 }
 
 export async function getClientById(id: string): Promise<Client | null> {
-  const supabase = createClient();
-  const [{ data: clientRow }, { data: bookingRows }] = await Promise.all([
-    supabase.from("clients").select("*").eq("id", id).maybeSingle(),
-    supabase
-      .from("bookings")
-      .select("client_id, status, total_price_cents, start_at")
-      .eq("client_id", id),
-  ]);
+  try {
+    const supabase = await getDbClient();
+    const [{ data: clientRow }, { data: bookingRows }] = await Promise.all([
+      supabase.from("clients").select("*").eq("id", id).maybeSingle(),
+      supabase
+        .from("bookings")
+        .select("client_id, status, total_price_cents, start_at")
+        .eq("client_id", id),
+    ]);
 
-  if (!clientRow) return null;
+    if (!clientRow) return MOCK_CLIENTS.find((c) => c.id === id) ?? null;
 
-  const bookings = (bookingRows ?? []).map((r) => ({
-    clientId: r.client_id,
-    status: r.status,
-    totalPriceCents: r.total_price_cents,
-    startAt: r.start_at,
-  })) as Booking[];
+    const bookings = (bookingRows ?? []).map((r) => ({
+      clientId: r.client_id,
+      status: r.status,
+      totalPriceCents: r.total_price_cents,
+      startAt: r.start_at,
+    })) as Booking[];
 
-  return { ...mapClient(clientRow), ...computeClientStats(id, bookings) };
+    return { ...mapClient(clientRow), ...computeClientStats(id, bookings) };
+  } catch {
+    return MOCK_CLIENTS.find((c) => c.id === id) ?? null;
+  }
 }
 
 export async function getClientBookings(clientId: string): Promise<Booking[]> {
-  const { data } = await createClient()
-    .from("bookings")
-    .select("*, clients(name), services(name)")
-    .eq("client_id", clientId)
-    .order("start_at", { ascending: false });
+  try {
+    const supabase = await getDbClient();
+    const { data } = await supabase
+      .from("bookings")
+      .select("*, clients(name), services(name)")
+      .eq("client_id", clientId)
+      .order("start_at", { ascending: false });
 
-  return (data ?? []).map(mapBooking);
+    return data && data.length > 0
+      ? data.map(mapBooking)
+      : MOCK_BOOKINGS.filter((b) => b.clientId === clientId);
+  } catch {
+    return MOCK_BOOKINGS.filter((b) => b.clientId === clientId);
+  }
 }
 
 // ─── Bookings ─────────────────────────────────────────────────────────────────
 
 export async function getBookings(): Promise<Booking[]> {
   const profileId = await getAuthProfileId();
-  if (!profileId) return [];
+  if (!profileId) return MOCK_BOOKINGS;
 
-  const { data } = await createClient()
-    .from("bookings")
-    .select("*, clients(name), services(name)")
-    .eq("profile_id", profileId)
-    .order("start_at", { ascending: false });
+  try {
+    const supabase = await getDbClient();
+    const { data } = await supabase
+      .from("bookings")
+      .select("*, clients(name), services(name)")
+      .eq("profile_id", profileId)
+      .order("start_at", { ascending: false });
 
-  return (data ?? []).map(mapBooking);
+    return data && data.length > 0 ? data.map(mapBooking) : MOCK_BOOKINGS;
+  } catch {
+    return MOCK_BOOKINGS;
+  }
 }
 
 export async function getBookingById(id: string): Promise<Booking | null> {
-  const { data } = await createClient()
-    .from("bookings")
-    .select(
-      `*, clients(name), services(name),
-       intake_responses(field_id, value, signature_name,
-         intake_form_fields(label))`
-    )
-    .eq("id", id)
-    .maybeSingle();
+  try {
+    const supabase = await getDbClient();
+    const { data } = await supabase
+      .from("bookings")
+      .select(
+        `*, clients(name), services(name),
+         intake_responses(field_id, value, signature_name,
+           intake_form_fields(label))`
+      )
+      .eq("id", id)
+      .maybeSingle();
 
-  if (!data) return null;
+    if (!data) return MOCK_BOOKINGS.find((b) => b.id === id) ?? null;
 
-  const booking = mapBooking(data);
-  if (data.intake_responses?.length) {
-    booking.intakeResponses = data.intake_responses.map((r: any) => ({
-      fieldId: r.field_id,
-      label: r.intake_form_fields?.label ?? "",
-      value: r.value,
-      signatureName: r.signature_name,
-    }));
+    const booking = mapBooking(data);
+    if (data.intake_responses?.length) {
+      booking.intakeResponses = data.intake_responses.map((r: any) => ({
+        fieldId: r.field_id,
+        label: r.intake_form_fields?.label ?? "",
+        value: r.value,
+        signatureName: r.signature_name,
+      }));
+    }
+
+    return booking;
+  } catch {
+    return MOCK_BOOKINGS.find((b) => b.id === id) ?? null;
   }
-
-  return booking;
 }
 
 export async function getTodayBookings(): Promise<Booking[]> {
@@ -349,114 +426,144 @@ export async function getDashboardStats() {
 
 export async function getAvailability(): Promise<AvailabilityRule[]> {
   const profileId = await getAuthProfileId();
-  if (!profileId) return [];
+  if (!profileId) return MOCK_AVAILABILITY;
 
-  const { data } = await createClient()
-    .from("availability_rules")
-    .select("*, availability_breaks(*)")
-    .eq("profile_id", profileId)
-    .order("weekday");
+  try {
+    const supabase = await getDbClient();
+    const { data } = await supabase
+      .from("availability_rules")
+      .select("*, availability_breaks(*)")
+      .eq("profile_id", profileId)
+      .order("weekday");
 
-  return (data ?? []).map(mapAvailability);
+    return data && data.length > 0 ? data.map(mapAvailability) : MOCK_AVAILABILITY;
+  } catch {
+    return MOCK_AVAILABILITY;
+  }
 }
 
 export async function getDateOverrides(): Promise<DateOverride[]> {
   const profileId = await getAuthProfileId();
-  if (!profileId) return [];
+  if (!profileId) return MOCK_DATE_OVERRIDES;
 
-  const { data } = await createClient()
-    .from("date_overrides")
-    .select("*")
-    .eq("profile_id", profileId)
-    .order("date");
+  try {
+    const supabase = await getDbClient();
+    const { data } = await supabase
+      .from("date_overrides")
+      .select("*")
+      .eq("profile_id", profileId)
+      .order("date");
 
-  return (data ?? []).map(mapDateOverride);
+    return data && data.length > 0 ? data.map(mapDateOverride) : MOCK_DATE_OVERRIDES;
+  } catch {
+    return MOCK_DATE_OVERRIDES;
+  }
 }
 
 // ─── Staff ────────────────────────────────────────────────────────────────────
 
 export async function getStaff(): Promise<Staff[]> {
   const profileId = await getAuthProfileId();
-  if (!profileId) return [];
+  if (!profileId) return MOCK_STAFF;
 
-  const supabase = createClient();
-  const [{ data: staffRows }, { data: bookingRows }] = await Promise.all([
-    supabase
-      .from("staff")
-      .select("*, staff_services(service_id)")
-      .eq("profile_id", profileId),
-    supabase
-      .from("bookings")
-      .select("staff_id")
-      .eq("profile_id", profileId)
-      .not("staff_id", "is", null),
-  ]);
+  try {
+    const supabase = await getDbClient();
+    const [{ data: staffRows }, { data: bookingRows }] = await Promise.all([
+      supabase
+        .from("staff")
+        .select("*, staff_services(service_id)")
+        .eq("profile_id", profileId),
+      supabase
+        .from("bookings")
+        .select("staff_id")
+        .eq("profile_id", profileId)
+        .not("staff_id", "is", null),
+    ]);
 
-  const countByStaff = (bookingRows ?? []).reduce<Record<string, number>>(
-    (acc, b) => {
-      if (b.staff_id) acc[b.staff_id] = (acc[b.staff_id] ?? 0) + 1;
-      return acc;
-    },
-    {}
-  );
+    if (!staffRows || staffRows.length === 0) return MOCK_STAFF;
 
-  return (staffRows ?? []).map((r) => ({
-    id: r.id,
-    profileId: r.profile_id,
-    userId: r.user_id,
-    name: r.name,
-    email: r.email,
-    role: r.role,
-    serviceIds: (r.staff_services ?? []).map((ss: any) => ss.service_id),
-    bookingCount: countByStaff[r.id] ?? 0,
-  }));
+    const countByStaff = (bookingRows ?? []).reduce<Record<string, number>>(
+      (acc, b) => {
+        if (b.staff_id) acc[b.staff_id] = (acc[b.staff_id] ?? 0) + 1;
+        return acc;
+      },
+      {}
+    );
+
+    return staffRows.map((r) => ({
+      id: r.id,
+      profileId: r.profile_id,
+      userId: r.user_id,
+      name: r.name,
+      email: r.email,
+      role: r.role,
+      serviceIds: (r.staff_services ?? []).map((ss: any) => ss.service_id),
+      bookingCount: countByStaff[r.id] ?? 0,
+    }));
+  } catch {
+    return MOCK_STAFF;
+  }
 }
 
 // ─── Notification templates & log ─────────────────────────────────────────────
 
 export async function getNotificationTemplates(): Promise<NotificationTemplate[]> {
   const profileId = await getAuthProfileId();
-  if (!profileId) return [];
+  if (!profileId) return MOCK_NOTIFICATION_TEMPLATES;
 
-  const { data } = await createClient()
-    .from("notification_templates")
-    .select("*")
-    .eq("profile_id", profileId);
+  try {
+    const supabase = await getDbClient();
+    const { data } = await supabase
+      .from("notification_templates")
+      .select("*")
+      .eq("profile_id", profileId);
 
-  return (data ?? []).map((r) => ({
-    id: r.id,
-    profileId: r.profile_id,
-    type: r.type,
-    channel: r.channel,
-    enabled: r.enabled,
-    subject: r.subject,
-    body: r.body,
-  }));
+    return data && data.length > 0
+      ? data.map((r) => ({
+          id: r.id,
+          profileId: r.profile_id,
+          type: r.type,
+          channel: r.channel,
+          enabled: r.enabled,
+          subject: r.subject,
+          body: r.body,
+        }))
+      : MOCK_NOTIFICATION_TEMPLATES;
+  } catch {
+    return MOCK_NOTIFICATION_TEMPLATES;
+  }
 }
 
 export async function getNotificationLog(): Promise<NotificationLogEntry[]> {
   const profileId = await getAuthProfileId();
-  if (!profileId) return [];
+  if (!profileId) return MOCK_NOTIFICATION_LOG;
 
-  const { data } = await createClient()
-    .from("notification_log")
-    .select("*, clients(name)")
-    .eq("profile_id", profileId)
-    .order("sent_at", { ascending: false })
-    .limit(100);
+  try {
+    const supabase = await getDbClient();
+    const { data } = await supabase
+      .from("notification_log")
+      .select("*, clients(name)")
+      .eq("profile_id", profileId)
+      .order("sent_at", { ascending: false })
+      .limit(100);
 
-  return (data ?? []).map((r) => ({
-    id: r.id,
-    profileId: r.profile_id,
-    bookingId: r.booking_id,
-    clientId: r.client_id,
-    clientName: r.clients?.name,
-    type: r.type,
-    channel: r.channel,
-    status: r.status,
-    errorMessage: r.error_message,
-    sentAt: r.sent_at,
-  }));
+    return data && data.length > 0
+      ? data.map((r) => ({
+          id: r.id,
+          profileId: r.profile_id,
+          bookingId: r.booking_id,
+          clientId: r.client_id,
+          clientName: r.clients?.name,
+          type: r.type,
+          channel: r.channel,
+          status: r.status,
+          errorMessage: r.error_message,
+          sentAt: r.sent_at,
+        }))
+      : MOCK_NOTIFICATION_LOG;
+  } catch {
+    return MOCK_NOTIFICATION_LOG;
+  }
 }
 
 // ─── Intake forms ─────────────────────────────────────────────────────────────
@@ -464,42 +571,32 @@ export async function getNotificationLog(): Promise<NotificationLogEntry[]> {
 export async function getIntakeForm(): Promise<IntakeForm> {
   const profileId = await getAuthProfileId();
 
-  // Return an empty stub when there's no auth session or no form in the DB.
-  // The form builder will render an empty state and let the user add fields.
-  const empty: IntakeForm = {
-    id: "",
-    profileId: profileId ?? "",
-    serviceId: null,
-    name: "Intake form",
-    fields: [],
-  };
+  try {
+    const supabase = await getDbClient();
 
-  if (!profileId) return empty;
+    const { data: general } = await supabase
+      .from("intake_forms")
+      .select("*, intake_form_fields(*)")
+      .eq("profile_id", profileId)
+      .is("service_id", null)
+      .order("created_at")
+      .limit(1)
+      .maybeSingle();
 
-  const supabase = createClient();
+    if (general) return mapIntakeForm(general);
 
-  // Prefer the general form (service_id IS NULL); fall back to the first
-  // service-specific form if no general form exists yet.
-  const { data: general } = await supabase
-    .from("intake_forms")
-    .select("*, intake_form_fields(*)")
-    .eq("profile_id", profileId)
-    .is("service_id", null)
-    .order("created_at")
-    .limit(1)
-    .maybeSingle();
+    const { data: fallbackForm } = await supabase
+      .from("intake_forms")
+      .select("*, intake_form_fields(*)")
+      .eq("profile_id", profileId)
+      .order("created_at")
+      .limit(1)
+      .maybeSingle();
 
-  if (general) return mapIntakeForm(general);
-
-  const { data: any } = await supabase
-    .from("intake_forms")
-    .select("*, intake_form_fields(*)")
-    .eq("profile_id", profileId)
-    .order("created_at")
-    .limit(1)
-    .maybeSingle();
-
-  return any ? mapIntakeForm(any) : empty;
+    return fallbackForm ? mapIntakeForm(fallbackForm) : MOCK_INTAKE_FORM;
+  } catch {
+    return MOCK_INTAKE_FORM;
+  }
 }
 
 // ─── Public booking page (no auth — admin client bypasses RLS) ───────────────

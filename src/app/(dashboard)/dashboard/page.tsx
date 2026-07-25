@@ -33,6 +33,7 @@ export default function DashboardPage() {
   const [newBookingOpen, setNewBookingOpen] = useState(false);
   const [depositSummaryOpen, setDepositSummaryOpen] = useState(false);
   const [remindersSent, setRemindersSent] = useState(false);
+  const [sendingReminders, setSendingReminders] = useState(false);
 
   const todayBookings = useMemo(() => computeTodayBookings(store.bookings), [store.bookings]);
   const upcomingBookings = useMemo(() => computeUpcomingBookings(store.bookings, 7), [store.bookings]);
@@ -44,6 +45,7 @@ export default function DashboardPage() {
   const todayDepositsOutstanding = todayDeposits.filter((b) => !b.depositPaid).reduce((s, b) => s + b.depositAmountCents, 0);
 
   async function sendRemindersToToday() {
+    setSendingReminders(true);
     const targets = todayBookings.filter((b) => b.status === "confirmed" || b.status === "pending");
     const reminderTemplate = store.notificationTemplates.find((t) => t.type === "reminder_24h");
 
@@ -74,6 +76,7 @@ export default function DashboardPage() {
     );
 
     store.logNotification(entries);
+    setSendingReminders(false);
     setRemindersSent(true);
     setTimeout(() => setRemindersSent(false), 2000);
   }
@@ -141,7 +144,7 @@ export default function DashboardPage() {
               <Button className="w-full justify-start" onClick={() => setNewBookingOpen(true)}>
                 <Plus className="h-4 w-4" /> Add manual booking
               </Button>
-              <Button variant="secondary" className="w-full justify-start" onClick={sendRemindersToToday}>
+              <Button variant="secondary" className="w-full justify-start" onClick={sendRemindersToToday} loading={sendingReminders} disabled={remindersSent}>
                 {remindersSent ? <Check className="h-4 w-4" /> : <Send className="h-4 w-4" />}
                 {remindersSent ? "Reminders sent" : "Send reminder to all today"}
               </Button>
