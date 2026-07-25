@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { createClient, createAdminClient } from "@/lib/supabase/server";
+import { isSupabaseConfigured } from "@/lib/supabase/is-configured";
 import {
   computeClientStats,
   computeTodayBookings,
@@ -195,6 +196,7 @@ async function getAuthProfileId(): Promise<string | null> {
 // ─── Profile ─────────────────────────────────────────────────────────────────
 
 export async function getCurrentProfile(): Promise<Profile | null> {
+  if (!isSupabaseConfigured()) return MOCK_PROFILE;
   try {
     const supabase = createClient();
     const {
@@ -241,6 +243,7 @@ export async function getProfileByUsername(username: string): Promise<Profile | 
 // ─── Services ─────────────────────────────────────────────────────────────────
 
 export async function getServices(): Promise<Service[]> {
+  if (!isSupabaseConfigured()) return MOCK_SERVICES;
   const profileId = await getAuthProfileId();
   if (!profileId) return MOCK_SERVICES;
 
@@ -276,6 +279,7 @@ export async function getServiceById(id: string): Promise<Service | null> {
 // ─── Clients ──────────────────────────────────────────────────────────────────
 
 export async function getClients(): Promise<Client[]> {
+  if (!isSupabaseConfigured()) return MOCK_CLIENTS;
   const profileId = await getAuthProfileId();
   if (!profileId) return MOCK_CLIENTS;
 
@@ -357,6 +361,7 @@ export async function getClientBookings(clientId: string): Promise<Booking[]> {
 // ─── Bookings ─────────────────────────────────────────────────────────────────
 
 export async function getBookings(): Promise<Booking[]> {
+  if (!isSupabaseConfigured()) return MOCK_BOOKINGS;
   const profileId = await getAuthProfileId();
   if (!profileId) return MOCK_BOOKINGS;
 
@@ -425,6 +430,7 @@ export async function getDashboardStats() {
 // ─── Availability ─────────────────────────────────────────────────────────────
 
 export async function getAvailability(): Promise<AvailabilityRule[]> {
+  if (!isSupabaseConfigured()) return MOCK_AVAILABILITY;
   const profileId = await getAuthProfileId();
   if (!profileId) return MOCK_AVAILABILITY;
 
@@ -443,6 +449,7 @@ export async function getAvailability(): Promise<AvailabilityRule[]> {
 }
 
 export async function getDateOverrides(): Promise<DateOverride[]> {
+  if (!isSupabaseConfigured()) return MOCK_DATE_OVERRIDES;
   const profileId = await getAuthProfileId();
   if (!profileId) return MOCK_DATE_OVERRIDES;
 
@@ -463,6 +470,7 @@ export async function getDateOverrides(): Promise<DateOverride[]> {
 // ─── Staff ────────────────────────────────────────────────────────────────────
 
 export async function getStaff(): Promise<Staff[]> {
+  if (!isSupabaseConfigured()) return MOCK_STAFF;
   const profileId = await getAuthProfileId();
   if (!profileId) return MOCK_STAFF;
 
@@ -508,6 +516,7 @@ export async function getStaff(): Promise<Staff[]> {
 // ─── Notification templates & log ─────────────────────────────────────────────
 
 export async function getNotificationTemplates(): Promise<NotificationTemplate[]> {
+  if (!isSupabaseConfigured()) return MOCK_NOTIFICATION_TEMPLATES;
   const profileId = await getAuthProfileId();
   if (!profileId) return MOCK_NOTIFICATION_TEMPLATES;
 
@@ -535,6 +544,7 @@ export async function getNotificationTemplates(): Promise<NotificationTemplate[]
 }
 
 export async function getNotificationLog(): Promise<NotificationLogEntry[]> {
+  if (!isSupabaseConfigured()) return MOCK_NOTIFICATION_LOG;
   const profileId = await getAuthProfileId();
   if (!profileId) return MOCK_NOTIFICATION_LOG;
 
@@ -569,6 +579,7 @@ export async function getNotificationLog(): Promise<NotificationLogEntry[]> {
 // ─── Intake forms ─────────────────────────────────────────────────────────────
 
 export async function getIntakeForm(): Promise<IntakeForm> {
+  if (!isSupabaseConfigured()) return MOCK_INTAKE_FORM;
   const profileId = await getAuthProfileId();
 
   try {

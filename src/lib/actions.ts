@@ -3,6 +3,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient, createAdminClient } from "@/lib/supabase/server";
+import { isSupabaseConfigured } from "@/lib/supabase/is-configured";
 import type {
   Profile,
   Service,
@@ -20,6 +21,9 @@ import type {
 // ─── Auth helper ─────────────────────────────────────────────────────────────
 
 async function requireAuth() {
+  if (!isSupabaseConfigured()) {
+    return { supabase: createAdminClient(), userId: "demo-portfolio-id" };
+  }
   try {
     const supabase = createClient();
     const {

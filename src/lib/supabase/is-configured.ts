@@ -3,5 +3,8 @@
 // into the dashboard's seeded data) until then.
 export function isSupabaseConfigured(): boolean {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  return !!url && !url.includes("placeholder");
+  if (!url || url.includes("placeholder") || url.includes("dvvkhykkevftzfiemslb")) {
+    return false;
+  }
+  return true;
 }
