@@ -2,6 +2,19 @@
 
 A vertical-specific booking & scheduling SaaS for service professionals (tattoo artists, dog groomers, music teachers, mobile beauty professionals). Built with Next.js, Supabase, and Stripe.
 
+## 🌐 Live Demo
+
+Try SlotWise in action: **[https://slot-wise-one.vercel.app/](https://slot-wise-one.vercel.app/)**
+
+The live demo is fully functional and deployed on Vercel. You can:
+- ✅ Create an account and explore the dashboard
+- ✅ Test the booking and scheduling interface
+- ✅ View client management features
+- ✅ Experience the mobile-responsive design
+- ✅ Explore the analytics dashboard
+
+Perfect for testing the core features and getting a feel for the platform before deployment!
+
 ## ✨ Key Features
 
 - **Smart Booking & Scheduling** - Week/day/month calendar views with drag-and-drop management
